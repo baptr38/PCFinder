@@ -4,163 +4,165 @@ PCFINDER - NAVIGATION VERS LES PAGES PRODUITS
 
 (function () {
 
-    var resultsContainer =
-        document.getElementById("results");
+```
+var resultsContainer =
+    document.getElementById("results");
 
 
-    if (!resultsContainer) {
+if (!resultsContainer) {
+
+    return;
+
+}
+
+
+function connectProductLinks() {
+
+    var links =
+        resultsContainer.querySelectorAll(
+            ".product-bottom a"
+        );
+
+
+    if (
+        links.length === 0
+    ) {
 
         return;
 
     }
 
 
-    function connectProductLinks() {
+    fetch(
+        "https://pcfinder-api-liwg.onrender.com/api/products"
+    )
 
-        var links =
-            resultsContainer.querySelectorAll(
-                ".product-bottom a"
-            );
+        .then(
+            function (response) {
 
+                if (!response.ok) {
 
-        if (
-            links.length === 0
-        ) {
-
-            return;
-
-        }
-
-
-        fetch(
-            "http://localhost:3000/api/products"
-        )
-
-            .then(
-                function (response) {
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            "Erreur API"
-                        );
-
-                    }
-
-                    return response.json();
+                    throw new Error(
+                        "Erreur API"
+                    );
 
                 }
-            )
 
-            .then(
-                function (products) {
+                return response.json();
+
+            }
+        )
+
+        .then(
+            function (products) {
+
+                for (
+                    var i = 0;
+                    i < links.length;
+                    i++
+                ) {
+
+                    var link =
+                        links[i];
+
+                    var originalUrl =
+                        link.href;
+
 
                     for (
-                        var i = 0;
-                        i < links.length;
-                        i++
+                        var p = 0;
+                        p < products.length;
+                        p++
                     ) {
 
-                        var link =
-                            links[i];
-
-                        var originalUrl =
-                            link.href;
+                        var product =
+                            products[p];
 
 
-                        for (
-                            var p = 0;
-                            p < products.length;
-                            p++
+                        if (
+                            !product.offers
                         ) {
 
-                            var product =
-                                products[p];
+                            continue;
+
+                        }
 
 
-                            if (
-                                !product.offers
-                            ) {
+                        var found =
+                            product.offers.some(
+                                function (offer) {
 
-                                continue;
+                                    return (
+                                        offer.url ===
+                                        originalUrl
+                                    );
 
-                            }
-
-
-                            var found =
-                                product.offers.some(
-                                    function (offer) {
-
-                                        return (
-                                            offer.url ===
-                                            originalUrl
-                                        );
-
-                                    }
-                                );
+                                }
+                            );
 
 
-                            if (found) {
+                        if (found) {
 
-                                link.href =
-                                    "produit.html?id=" +
-                                    product.id;
+                            link.href =
+                                "produit.html?id=" +
+                                product.id;
 
-                                link.removeAttribute(
-                                    "target"
-                                );
+                            link.removeAttribute(
+                                "target"
+                            );
 
-                                link.removeAttribute(
-                                    "rel"
-                                );
+                            link.removeAttribute(
+                                "rel"
+                            );
 
-                                link.textContent =
-                                    "Voir le PC →";
+                            link.textContent =
+                                "Voir le PC →";
 
-                                break;
-
-                            }
+                            break;
 
                         }
 
                     }
 
                 }
-            )
 
-            .catch(
-                function (error) {
+            }
+        )
 
-                    console.error(
-                        "Impossible de connecter les pages produits :",
-                        error
-                    );
+        .catch(
+            function (error) {
 
-                }
-            );
-
-    }
-
-
-    var observer =
-        new MutationObserver(
-            function () {
-
-                connectProductLinks();
+                console.error(
+                    "Impossible de connecter les pages produits :",
+                    error
+                );
 
             }
         );
 
+}
 
-    observer.observe(
-        resultsContainer,
-        {
-            childList: true,
-            subtree: true
+
+var observer =
+    new MutationObserver(
+        function () {
+
+            connectProductLinks();
+
         }
     );
 
 
-    connectProductLinks();
+observer.observe(
+    resultsContainer,
+    {
+        childList: true,
+        subtree: true
+    }
+);
+
+
+connectProductLinks();
+```
 
 })();
