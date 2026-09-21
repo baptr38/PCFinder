@@ -1,33 +1,39 @@
 .product-merchant {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
+position: absolute;
+bottom: 8px;
+left: 8px;
 
-    display: flex;
-    align-items: center;
-    gap: 5px;
 
-    padding: 4px 7px;
+display: flex;
+align-items: center;
+gap: 7px;
 
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 5px;
+padding: 5px 8px;
 
-    z-index: 5;
+background: rgba(255, 255, 255, 0.95);
+border-radius: 5px;
+
+z-index: 5;
+
+
 }
 
 .merchant-logo {
-    display: block;
-    width: 32px !important;
-    height: 16px !important;
+display: block;
+width: 48px !important;
+height: 24px !important;
 
-    object-fit: contain !important;
-    object-position: center !important;
 
-    flex-shrink: 0;
+object-fit: contain !important;
+object-position: center !important;
+
+flex-shrink: 0;
+
+
 }
 
 .product-merchant span {
-    font-size: 11px;
-    line-height: 1;
-    color: #222;
+font-size: 13px;
+line-height: 1;
+color: #222;
 }
