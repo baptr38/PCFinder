@@ -9,8 +9,115 @@ const PORT = process.env.PORT || 3000;
 
 const DATA_FILE = path.join(__dirname, "data", "products.json");
 
+// ======================================================
+// CONFIGURATION ADMIN
+// ======================================================
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+// ======================================================
+// MIDDLEWARES
+// ======================================================
+
 app.use(cors());
 app.use(express.json());
+
+// ======================================================
+// AUTHENTIFICATION ADMIN
+// ======================================================
+
+function requireAdmin(req, res, next) {
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+        console.error(
+            "ERREUR : ADMIN_USERNAME ou ADMIN_PASSWORD n'est pas configuré dans Render."
+        );
+
+        return res.status(500).json({
+            error: "Authentification administrateur non configurée"
+        });
+    }
+
+    const authorization = req.headers.authorization;
+
+    if (!authorization || !authorization.startsWith("Basic ")) {
+        res.setHeader(
+            "WWW-Authenticate",
+            'Basic realm="PCFinder Administration"'
+        );
+
+        return res.status(401).send(
+            "Authentification administrateur requise."
+        );
+    }
+
+    try {
+        const encodedCredentials =
+            authorization.slice(6);
+
+        const decodedCredentials =
+            Buffer.from(
+                encodedCredentials,
+                "base64"
+            ).toString("utf8");
+
+        const separatorIndex =
+            decodedCredentials.indexOf(":");
+
+        if (separatorIndex === -1) {
+            res.setHeader(
+                "WWW-Authenticate",
+                'Basic realm="PCFinder Administration"'
+            );
+
+            return res.status(401).send(
+                "Identifiants invalides."
+            );
+        }
+
+        const username =
+            decodedCredentials.slice(
+                0,
+                separatorIndex
+            );
+
+        const password =
+            decodedCredentials.slice(
+                separatorIndex + 1
+            );
+
+        if (
+            username !== ADMIN_USERNAME ||
+            password !== ADMIN_PASSWORD
+        ) {
+            res.setHeader(
+                "WWW-Authenticate",
+                'Basic realm="PCFinder Administration"'
+            );
+
+            return res.status(401).send(
+                "Identifiants invalides."
+            );
+        }
+
+        next();
+
+    } catch (error) {
+        console.error(
+            "Erreur lors de l'authentification admin :",
+            error
+        );
+
+        res.setHeader(
+            "WWW-Authenticate",
+            'Basic realm="PCFinder Administration"'
+        );
+
+        return res.status(401).send(
+            "Authentification invalide."
+        );
+    }
+}
 
 // ======================================================
 // INTERFACE ADMIN
@@ -18,13 +125,24 @@ app.use(express.json());
 
 const ADMIN_DIR = path.join(__dirname, "admin");
 
-app.use("/admin", express.static(ADMIN_DIR));
+app.use(
+    "/admin",
+    requireAdmin,
+    express.static(ADMIN_DIR)
+);
 
-app.get("/admin", (req, res) => {
-    res.sendFile(
-        path.join(ADMIN_DIR, "admin.html")
-    );
-});
+app.get(
+    "/admin",
+    requireAdmin,
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                ADMIN_DIR,
+                "admin.html"
+            )
+        );
+    }
+);
 
 // ======================================================
 // OUTILS DE CALCUL DES SCORES
@@ -602,157 +720,169 @@ app.get("/api/products/:id", (req, res) => {
 // AJOUTER UN PRODUIT
 // ======================================================
 
-app.post("/api/products", (req, res) => {
-    const products = getProducts();
-    const newProduct = req.body;
+app.post(
+    "/api/products",
+    requireAdmin,
+    (req, res) => {
+        const products = getProducts();
+        const newProduct = req.body;
 
-    if (!newProduct.name) {
-        return res.status(400).json({
-            error: "Le nom du produit est obligatoire"
-        });
+        if (!newProduct.name) {
+            return res.status(400).json({
+                error: "Le nom du produit est obligatoire"
+            });
+        }
+
+        const newId =
+            products.length > 0
+                ? Math.max(
+                    ...products.map(
+                        product => product.id
+                    )
+                ) + 1
+                : 1;
+
+        newProduct.id = newId;
+
+        const automaticScores =
+            calculateScores(newProduct);
+
+        newProduct.scores =
+            applyScoreOverrides(
+                automaticScores,
+                newProduct.scoreOverrides
+            );
+
+        if (
+            !newProduct.scoreOverrides ||
+            Object.keys(newProduct.scoreOverrides).length === 0
+        ) {
+            delete newProduct.scoreOverrides;
+        }
+
+        products.push(newProduct);
+
+        const saved = saveProducts(products);
+
+        if (!saved) {
+            return res.status(500).json({
+                error: "Impossible d'enregistrer le produit"
+            });
+        }
+
+        res.status(201).json(newProduct);
     }
-
-    const newId =
-        products.length > 0
-            ? Math.max(
-                ...products.map(
-                    product => product.id
-                )
-            ) + 1
-            : 1;
-
-    newProduct.id = newId;
-
-    const automaticScores =
-        calculateScores(newProduct);
-
-    newProduct.scores =
-        applyScoreOverrides(
-            automaticScores,
-            newProduct.scoreOverrides
-        );
-
-    if (
-        !newProduct.scoreOverrides ||
-        Object.keys(newProduct.scoreOverrides).length === 0
-    ) {
-        delete newProduct.scoreOverrides;
-    }
-
-    products.push(newProduct);
-
-    const saved = saveProducts(products);
-
-    if (!saved) {
-        return res.status(500).json({
-            error: "Impossible d'enregistrer le produit"
-        });
-    }
-
-    res.status(201).json(newProduct);
-});
+);
 
 // ======================================================
 // MODIFIER UN PRODUIT
 // ======================================================
 
-app.put("/api/products/:id", (req, res) => {
-    const products = getProducts();
-    const id = Number(req.params.id);
+app.put(
+    "/api/products/:id",
+    requireAdmin,
+    (req, res) => {
+        const products = getProducts();
+        const id = Number(req.params.id);
 
-    const index = products.findIndex(
-        product => product.id === id
-    );
-
-    if (index === -1) {
-        return res.status(404).json({
-            error: "Produit introuvable"
-        });
-    }
-
-    const oldProduct = products[index];
-
-    const newProduct = {
-        ...oldProduct,
-        ...req.body,
-        id: id
-    };
-
-    const oldOverrides =
-        oldProduct.scoreOverrides || {};
-
-    const newOverrides =
-        req.body.scoreOverrides || {};
-
-    newProduct.scoreOverrides = {
-        ...oldOverrides,
-        ...newOverrides
-    };
-
-    const automaticScores =
-        calculateScores(newProduct);
-
-    newProduct.scores =
-        applyScoreOverrides(
-            automaticScores,
-            newProduct.scoreOverrides
+        const index = products.findIndex(
+            product => product.id === id
         );
 
-    if (
-        Object.keys(
-            newProduct.scoreOverrides
-        ).length === 0
-    ) {
-        delete newProduct.scoreOverrides;
+        if (index === -1) {
+            return res.status(404).json({
+                error: "Produit introuvable"
+            });
+        }
+
+        const oldProduct = products[index];
+
+        const newProduct = {
+            ...oldProduct,
+            ...req.body,
+            id: id
+        };
+
+        const oldOverrides =
+            oldProduct.scoreOverrides || {};
+
+        const newOverrides =
+            req.body.scoreOverrides || {};
+
+        newProduct.scoreOverrides = {
+            ...oldOverrides,
+            ...newOverrides
+        };
+
+        const automaticScores =
+            calculateScores(newProduct);
+
+        newProduct.scores =
+            applyScoreOverrides(
+                automaticScores,
+                newProduct.scoreOverrides
+            );
+
+        if (
+            Object.keys(
+                newProduct.scoreOverrides
+            ).length === 0
+        ) {
+            delete newProduct.scoreOverrides;
+        }
+
+        products[index] = newProduct;
+
+        const saved = saveProducts(products);
+
+        if (!saved) {
+            return res.status(500).json({
+                error: "Impossible de modifier le produit"
+            });
+        }
+
+        res.json(newProduct);
     }
-
-    products[index] = newProduct;
-
-    const saved = saveProducts(products);
-
-    if (!saved) {
-        return res.status(500).json({
-            error: "Impossible de modifier le produit"
-        });
-    }
-
-    res.json(newProduct);
-});
+);
 
 // ======================================================
 // SUPPRIMER UN PRODUIT
 // ======================================================
 
-app.delete("/api/products/:id", (req, res) => {
-    const products = getProducts();
-    const id = Number(req.params.id);
+app.delete(
+    "/api/products/:id",
+    requireAdmin,
+    (req, res) => {
+        const products = getProducts();
+        const id = Number(req.params.id);
 
-    const newProducts = products.filter(
-        product => product.id !== id
-    );
+        const newProducts = products.filter(
+            product => product.id !== id
+        );
 
-    if (
-        newProducts.length ===
-        products.length
-    ) {
-        return res.status(404).json({
-            error: "Produit introuvable"
+        if (
+            newProducts.length ===
+            products.length
+        ) {
+            return res.status(404).json({
+                error: "Produit introuvable"
+            });
+        }
+
+        const saved = saveProducts(newProducts);
+
+        if (!saved) {
+            return res.status(500).json({
+                error: "Impossible de supprimer le produit"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Produit supprimé"
         });
     }
-
-    const saved = saveProducts(newProducts);
-
-    if (!saved) {
-        return res.status(500).json({
-            error: "Impossible de supprimer le produit"
-        });
-    }
-
-    res.json({
-        success: true,
-        message: "Produit supprimé"
-    });
-});
+);
 
 // ======================================================
 // DÉMARRER LE SERVEUR
