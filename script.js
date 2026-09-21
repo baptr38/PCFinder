@@ -31,8 +31,6 @@ budgetSlider.addEventListener("input", function () {
 
 }
 
-
-
 /* ==========================================
 CHOIX DU QUESTIONNAIRE
 ========================================== */
@@ -247,9 +245,7 @@ CHARGEMENT DES PRODUITS DEPUIS L'API
 function loadProductsFromAPI(callback) {
 
 
-fetch(
-    "http://localhost:3000/api/products"
-)
+fetch("https://pcfinder-api.onrender.com/api/products")
 
     .then(function (response) {
 
@@ -610,8 +606,6 @@ if (
 
 }
 
-/* PC DANS LE BUDGET */
-
 if (price <= budget) {
 
     var difference =
@@ -651,8 +645,6 @@ if (price <= budget) {
     return 76;
 
 }
-
-/* PC LEGEREMENT AU-DESSUS */
 
 var overDifference =
     price - budget;
@@ -944,9 +936,7 @@ var creationScore =
         scores.creation
     );
 
-/* ======================================
-   MONTAGE
-====================================== */
+/* MONTAGE */
 
 if (
     search.usage === "montage"
@@ -980,9 +970,7 @@ if (
 
 }
 
-/* ======================================
-   CREATION
-====================================== */
+/* CREATION */
 
 if (
     search.usage === "creation"
@@ -1015,9 +1003,7 @@ if (
 
 }
 
-/* ======================================
-   GAMING
-====================================== */
+/* GAMING */
 
 if (
     search.usage === "gaming"
@@ -1050,9 +1036,7 @@ if (
 
 }
 
-/* ======================================
-   MIX
-====================================== */
+/* MIX */
 
 if (
     search.usage === "mix"
@@ -1078,9 +1062,7 @@ if (
 
 }
 
-/* ======================================
-   PRIORITE ECRAN
-====================================== */
+/* PRIORITE ECRAN */
 
 if (
     search.priority === "screen"
@@ -1104,9 +1086,7 @@ if (
 
 }
 
-/* ======================================
-   PRIORITE PERFORMANCE
-====================================== */
+/* PRIORITE PERFORMANCE */
 
 if (
     search.priority === "performance"
@@ -1130,9 +1110,7 @@ if (
 
 }
 
-/* ======================================
-   PRIORITE AUTONOMIE
-====================================== */
+/* PRIORITE AUTONOMIE */
 
 if (
     search.priority === "battery"
@@ -1156,9 +1134,7 @@ if (
 
 }
 
-/* ======================================
-   EQUILIBRE
-====================================== */
+/* EQUILIBRE */
 
 if (
     search.priority === "balanced"
@@ -1228,11 +1204,8 @@ var featureBonus =
     );
 
 var usageWeight = 0.40;
-
 var priorityWeight = 0.20;
-
 var budgetWeight = 0.25;
-
 var sizeWeight = 0.10;
 
 if (
@@ -1428,11 +1401,8 @@ var compatibleProducts =
             }
 
             return (
-
                 budgetCompatible &&
-
                 sizeCompatible
-
             );
 
         }
@@ -1478,15 +1448,12 @@ if (
         function (a, b) {
 
             return (
-
                 Number(
                     getBestOffer(a).price
                 ) -
-
                 Number(
                     getBestOffer(b).price
                 )
-
             );
 
         }
@@ -1502,15 +1469,12 @@ else if (
         function (a, b) {
 
             return (
-
                 Number(
                     getBestOffer(b).price
                 ) -
-
                 Number(
                     getBestOffer(a).price
                 )
-
             );
 
         }
@@ -1526,17 +1490,14 @@ else if (
         function (a, b) {
 
             return (
-
                 scoreTo100(
                     b.scores &&
                     b.scores.gaming
                 ) -
-
                 scoreTo100(
                     a.scores &&
                     a.scores.gaming
                 )
-
             );
 
         }
@@ -1552,17 +1513,14 @@ else if (
         function (a, b) {
 
             return (
-
                 scoreTo100(
                     b.scores &&
                     b.scores.montage
                 ) -
-
                 scoreTo100(
                     a.scores &&
                     a.scores.montage
                 )
-
             );
 
         }
@@ -1578,17 +1536,14 @@ else if (
         function (a, b) {
 
             return (
-
                 scoreTo100(
                     b.scores &&
                     b.scores.screen
                 ) -
-
                 scoreTo100(
                     a.scores &&
                     a.scores.screen
                 )
-
             );
 
         }
@@ -1604,17 +1559,14 @@ else if (
         function (a, b) {
 
             return (
-
                 scoreTo100(
                     b.scores &&
                     b.scores.battery
                 ) -
-
                 scoreTo100(
                     a.scores &&
                     a.scores.battery
                 )
-
             );
 
         }
@@ -1653,9 +1605,7 @@ search
 
 
 var usageText = "";
-
 var priorityText = "";
-
 var budgetText = "";
 
 var scores =
@@ -1975,14 +1925,12 @@ else {
 }
 
 return (
-
     "Ce PC offre " +
     usageText +
     ", avec " +
     priorityText +
     ". " +
     budgetText
-
 );
 
 
@@ -2039,35 +1987,24 @@ var logo =
 if (!logo) {
 
     return (
-
         '<div class="product-merchant">' +
-
             merchant +
-
         "</div>"
-
     );
 
 }
 
 return (
-
     '<div class="product-merchant">' +
-
         '<img src="' +
             logo +
         '" alt="' +
             merchant +
         '" class="merchant-logo">' +
-
         '<span class="merchant-name">' +
-
             merchant +
-
         '</span>' +
-
     '</div>'
-
 );
 
 
@@ -2209,7 +2146,6 @@ for (
 }
 
 return (
-
     '<div style="' +
         'margin-top:10px;' +
         'padding-top:2px;' +
@@ -2229,7 +2165,6 @@ return (
         offersHTML +
 
     "</div>"
-
 );
 
 
@@ -2407,9 +2342,7 @@ else {
 
 }
 
-/* ======================================
-   IMAGE
-====================================== */
+/* IMAGE */
 
 var imageHTML =
     "";
@@ -2442,9 +2375,7 @@ else {
 
 }
 
-/* ======================================
-   OFFRE / BUDGET
-====================================== */
+/* OFFRE / BUDGET */
 
 var bestOffer =
     getBestOffer(laptop);
@@ -2495,9 +2426,7 @@ else {
 
 }
 
-/* ======================================
-   ECRAN
-====================================== */
+/* ECRAN */
 
 var screenDetails =
 
@@ -2591,9 +2520,7 @@ var screenDetails =
 
     '</div>';
 
-/* ======================================
-   CARACTERISTIQUES
-====================================== */
+/* CARACTERISTIQUES */
 
 var extraDetails =
 
@@ -2631,9 +2558,7 @@ var extraDetails =
 
     '</div>';
 
-/* ======================================
-   POINTS FORTS / FAIBLES
-====================================== */
+/* POINTS FORTS / FAIBLES */
 
 var strengthsHTML =
     "";
@@ -2727,9 +2652,7 @@ if (
 
 }
 
-/* ======================================
-   AUTRES OFFRES
-====================================== */
+/* AUTRES OFFRES */
 
 var otherOffersHTML =
     createOtherOffersHTML(
@@ -2737,9 +2660,7 @@ var otherOffersHTML =
         bestOffer
     );
 
-/* ======================================
-   CARTE COMPLETE
-====================================== */
+/* CARTE COMPLETE */
 
 card.innerHTML =
 
@@ -2880,9 +2801,7 @@ card.innerHTML =
 
     "</div>";
 
-/* ======================================
-   GESTION ERREUR IMAGE
-====================================== */
+/* GESTION ERREUR IMAGE */
 
 var image =
     card.querySelector(
@@ -2988,7 +2907,7 @@ search,
 container
 ) {
 
-rien
+
 if (!container) {
     return;
 }
@@ -2996,18 +2915,14 @@ if (!container) {
 container.innerHTML =
     "";
 
-/* ======================================
-   PRODUITS COMPATIBLES
-====================================== */
+/* PRODUITS COMPATIBLES */
 
 var compatibleProducts =
     filterProducts(
         search
     );
 
-/* ======================================
-   CALCUL DU SCORE
-====================================== */
+/* CALCUL DU SCORE */
 
 var scoredProducts =
     [];
@@ -3054,9 +2969,7 @@ for (
 
 }
 
-/* ======================================
-   CLASSEMENT
-====================================== */
+/* CLASSEMENT */
 
 var ranking =
     scoredProducts.slice();
@@ -3065,18 +2978,14 @@ ranking.sort(
     function (a, b) {
 
         return (
-
             b.score -
             a.score
-
         );
 
     }
 );
 
-/* ======================================
-   TOP 3
-====================================== */
+/* TOP 3 */
 
 var topProducts =
     ranking.slice(
@@ -3095,9 +3004,7 @@ container.appendChild(
     topGrid
 );
 
-/* ======================================
-   RETIRE LES 3 PC DU TOP
-====================================== */
+/* RETIRE LES 3 PC DU TOP */
 
 var topIds =
     [];
@@ -3119,19 +3026,15 @@ var otherProducts =
         function (laptop) {
 
             return (
-
                 topIds.indexOf(
                     laptop.id
                 ) === -1
-
             );
 
         }
     );
 
-/* ======================================
-   TRI AUTRES RESULTATS
-====================================== */
+/* TRI AUTRES RESULTATS */
 
 var sortedOtherProducts =
     sortProducts(
@@ -3139,9 +3042,7 @@ var sortedOtherProducts =
         search
     );
 
-/* ======================================
-   TITRE
-====================================== */
+/* TITRE */
 
 if (
     sortedOtherProducts.length > 0
@@ -3167,9 +3068,7 @@ if (
 
 }
 
-/* ======================================
-   GRILLE
-====================================== */
+/* GRILLE */
 
 var allGrid =
     createProductGrid(
@@ -3181,5 +3080,6 @@ var allGrid =
 container.appendChild(
     allGrid
 );
+
 
 }
