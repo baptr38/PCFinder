@@ -17,6 +17,13 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // ======================================================
+// CONFIGURATION AMAZON AFFILIATION
+// ======================================================
+
+const AMAZON_ASSOCIATE_TAG =
+    process.env.AMAZON_ASSOCIATE_TAG || "pcfinderfr-21";
+
+// ======================================================
 // MIDDLEWARES
 // ======================================================
 
@@ -143,6 +150,153 @@ app.get(
         );
     }
 );
+
+// ======================================================
+// OUTILS AMAZON AFFILIATION
+// ======================================================
+
+function createAmazonAffiliateUrl(url) {
+    if (!url) {
+        return url;
+    }
+
+    const originalUrl = String(url).trim();
+
+    if (!originalUrl) {
+        return originalUrl;
+    }
+
+    const lowerUrl = originalUrl.toLowerCase();
+
+    if (
+        !lowerUrl.includes("amazon.fr") &&
+        !lowerUrl.includes("amzn.eu") &&
+        !lowerUrl.includes("amzn.to") &&
+        !lowerUrl.includes("link.amazon")
+    ) {
+        return originalUrl;
+    }
+
+    // --------------------------------------------------
+    // Recherche de l'ASIN
+    // --------------------------------------------------
+
+    let asin = null;
+
+    const dpMatch = originalUrl.match(
+        /\/dp\/([A-Z0-9]{10})/i
+    );
+
+    if (dpMatch) {
+        asin = dpMatch[1];
+    }
+
+    if (!asin) {
+        const gpProductMatch = originalUrl.match(
+            /\/gp\/product\/([A-Z0-9]{10})/i
+        );
+
+        if (gpProductMatch) {
+            asin = gpProductMatch[1];
+        }
+    }
+
+    if (!asin) {
+        const productMatch = originalUrl.match(
+            /\/product\/([A-Z0-9]{10})/i
+        );
+
+        if (productMatch) {
+            asin = productMatch[1];
+        }
+    }
+
+    // --------------------------------------------------
+    // Si aucun ASIN n'est trouvé
+    // --------------------------------------------------
+
+    if (!asin) {
+        console.warn(
+            "Impossible de trouver l'ASIN Amazon dans :",
+            originalUrl
+        );
+
+        return originalUrl;
+    }
+
+    // --------------------------------------------------
+    // Génération du lien affilié propre
+    // --------------------------------------------------
+
+    return (
+        "https://www.amazon.fr/dp/" +
+        asin +
+        "?tag=" +
+        encodeURIComponent(
+            AMAZON_ASSOCIATE_TAG
+        )
+    );
+}
+
+function processAmazonOffers(product) {
+    if (!product || !Array.isArray(product.offers)) {
+        return product;
+    }
+
+    product.offers = product.offers.map(function (offer) {
+        if (!offer || typeof offer !== "object") {
+            return offer;
+        }
+
+        const updatedOffer = {
+            ...offer
+        };
+
+        const merchant = String(
+            updatedOffer.merchant ||
+            updatedOffer.store ||
+            updatedOffer.shop ||
+            ""
+        ).toLowerCase();
+
+        const url = String(
+            updatedOffer.url ||
+            updatedOffer.link ||
+            ""
+        );
+
+        const isAmazon =
+            merchant.includes("amazon") ||
+            url.toLowerCase().includes("amazon.fr") ||
+            url.toLowerCase().includes("amzn.eu") ||
+            url.toLowerCase().includes("amzn.to") ||
+            url.toLowerCase().includes("link.amazon");
+
+        if (isAmazon && url) {
+            const affiliateUrl =
+                createAmazonAffiliateUrl(url);
+
+            if (updatedOffer.url !== undefined) {
+                updatedOffer.url = affiliateUrl;
+            }
+
+            if (updatedOffer.link !== undefined) {
+                updatedOffer.link = affiliateUrl;
+            }
+
+            if (
+                updatedOffer.url === undefined &&
+                updatedOffer.link === undefined
+            ) {
+                updatedOffer.url = affiliateUrl;
+            }
+        }
+
+        return updatedOffer;
+    });
+
+    return product;
+}
 
 // ======================================================
 // OUTILS DE CALCUL DES SCORES
@@ -660,6 +814,8 @@ function recalculateAllScores() {
             product.scores = finalScores;
             changed = true;
         }
+
+        processAmazonOffers(product);
     });
 
     if (changed) {
@@ -725,13 +881,19 @@ app.post(
     requireAdmin,
     (req, res) => {
         const products = getProducts();
-        const newProduct = req.body;
+
+        let newProduct = {
+            ...req.body
+        };
 
         if (!newProduct.name) {
             return res.status(400).json({
                 error: "Le nom du produit est obligatoire"
             });
         }
+
+        newProduct =
+            processAmazonOffers(newProduct);
 
         const newId =
             products.length > 0
@@ -797,7 +959,7 @@ app.put(
 
         const oldProduct = products[index];
 
-        const newProduct = {
+        let newProduct = {
             ...oldProduct,
             ...req.body,
             id: id
@@ -813,6 +975,9 @@ app.put(
             ...oldOverrides,
             ...newOverrides
         };
+
+        newProduct =
+            processAmazonOffers(newProduct);
 
         const automaticScores =
             calculateScores(newProduct);
@@ -898,4 +1063,8 @@ app.listen(PORT, "0.0.0.0", () => {
     console.log("");
     console.log(`Serveur lancé sur le port ${PORT}`);
     console.log("");
+    console.log(
+        "Tag Amazon utilisé : " +
+        AMAZON_ASSOCIATE_TAG
+    );
 });
