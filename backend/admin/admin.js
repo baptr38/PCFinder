@@ -10,6 +10,8 @@
     /* CONFIGURATION */
     /* ===================================================== */
 
+    var AMAZON_ASSOCIATE_TAG = "pcfinderfr-21";
+
     function getApiBase() {
         var host = window.location.hostname || "";
 
@@ -17,17 +19,126 @@
             return "http://localhost:3000";
         }
 
-        if (host === "pcfinder-api.onrender.com") {
+        if (host === "pcfinder-api-liwg.onrender.com") {
             return "";
         }
 
-        return "https://pcfinder-api.onrender.com";
+        return "https://pcfinder-api-liwg.onrender.com";
     }
 
     var API_BASE = getApiBase();
 
     function apiUrl(path) {
         return API_BASE + path;
+    }
+
+    /* ===================================================== */
+    /* AMAZON AFFILIATION */
+    /* ===================================================== */
+
+    function isAmazonUrl(value) {
+        if (!value) {
+            return false;
+        }
+
+        try {
+            var url = new URL(value);
+            var hostname = url.hostname.toLowerCase();
+
+            return (
+                hostname === "amazon.fr" ||
+                hostname === "www.amazon.fr" ||
+                hostname.endsWith(".amazon.fr")
+            );
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function extractAmazonAsin(value) {
+        if (!value) {
+            return "";
+        }
+
+        var match = String(value).match(
+            /\/(?:dp|gp\/product|product)\/([A-Z0-9]{10})(?:[/?#]|$)/i
+        );
+
+        if (match && match[1]) {
+            return match[1].toUpperCase();
+        }
+
+        try {
+            var url = new URL(value);
+            var asinParameter = url.searchParams.get("asin");
+
+            if (asinParameter && /^[A-Z0-9]{10}$/i.test(asinParameter)) {
+                return asinParameter.toUpperCase();
+            }
+        } catch (error) {
+            return "";
+        }
+
+        return "";
+    }
+
+    function createAmazonAffiliateUrl(value) {
+        if (!isAmazonUrl(value)) {
+            return value;
+        }
+
+        var asin = extractAmazonAsin(value);
+
+        if (!asin) {
+            return value;
+        }
+
+        return (
+            "https://www.amazon.fr/dp/" +
+            asin +
+            "/ref=nosim?tag=" +
+            encodeURIComponent(AMAZON_ASSOCIATE_TAG)
+        );
+    }
+
+    function isAmazonAffiliateUrl(value) {
+        if (!isAmazonUrl(value)) {
+            return false;
+        }
+
+        try {
+            var url = new URL(value);
+            var tag = url.searchParams.get("tag");
+
+            return tag === AMAZON_ASSOCIATE_TAG;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function processOfferUrl(url) {
+        var originalUrl = String(url || "").trim();
+
+        if (!originalUrl) {
+            return {
+                url: "",
+                affiliate: false
+            };
+        }
+
+        if (!isAmazonUrl(originalUrl)) {
+            return {
+                url: originalUrl,
+                affiliate: false
+            };
+        }
+
+        var affiliateUrl = createAmazonAffiliateUrl(originalUrl);
+
+        return {
+            url: affiliateUrl,
+            affiliate: isAmazonAffiliateUrl(affiliateUrl)
+        };
     }
 
     /* ===================================================== */
@@ -254,7 +365,10 @@
     function ensureImageField(formType) {
         var isAdd = formType === "add";
         var form = isAdd ? addForm : editForm;
-        if (!form) return null;
+
+        if (!form) {
+            return null;
+        }
 
         var id = isAdd ? "addImage" : "editImage";
         var existing = document.getElementById(id);
@@ -287,7 +401,9 @@
     /* ===================================================== */
 
     function showNoOffers(container) {
-        if (!container) return;
+        if (!container) {
+            return;
+        }
 
         container.innerHTML =
             '<div class="no-offers">' +
@@ -295,49 +411,25 @@
             "</div>";
     }
 
-    function ensureOfferAffiliateControls(row, offer) {
-        if (!row || row.querySelector(".offer-affiliate")) {
+    function addOfferRow(container, offer) {
+        if (!container) {
             return;
         }
 
-        var wrapper = document.createElement("label");
-        wrapper.className = "offer-affiliate-wrap";
-        wrapper.style.display = "inline-flex";
-        wrapper.style.alignItems = "center";
-        wrapper.style.gap = "7px";
-        wrapper.style.minHeight = "42px";
-        wrapper.style.padding = "8px 10px";
-        wrapper.style.border = "1px solid rgba(139, 92, 246, 0.25)";
-        wrapper.style.borderRadius = "8px";
-        wrapper.style.background = "rgba(139, 92, 246, 0.06)";
-        wrapper.style.color = "var(--text)";
-        wrapper.style.fontSize = "12px";
-        wrapper.style.cursor = "pointer";
-        wrapper.style.whiteSpace = "nowrap";
-
-        var checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "offer-affiliate";
-        checkbox.checked = !!(offer && offer.affiliate);
-
-        var text = document.createElement("span");
-        text.textContent = "Affiliée";
-
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(text);
-        row.insertBefore(wrapper, row.lastElementChild);
-    }
-
-    function addOfferRow(container, offer) {
-        if (!container) return;
-
         offer = offer || {};
+
+        var processedUrl = processOfferUrl(offer.url || "");
+
+        var finalUrl = processedUrl.url || offer.url || "";
+        var finalAffiliate =
+            processedUrl.affiliate || !!offer.affiliate;
 
         var row = document.createElement("div");
         row.className = "offer-row";
 
         row.style.display = "grid";
-        row.style.gridTemplateColumns = "minmax(120px, 1fr) minmax(90px, 130px) minmax(180px, 2fr) auto auto";
+        row.style.gridTemplateColumns =
+            "minmax(120px, 1fr) minmax(90px, 130px) minmax(180px, 2fr) auto auto";
         row.style.gap = "10px";
         row.style.alignItems = "center";
         row.style.marginBottom = "10px";
@@ -347,18 +439,37 @@
                 escapeAttribute(offer.merchant || "") +
             '">' +
             '<input type="number" class="offer-price" placeholder="Prix (€)" min="0" step="0.01" value="' +
-                (offer.price !== undefined && offer.price !== null ? escapeAttribute(offer.price) : "") +
+                (offer.price !== undefined && offer.price !== null
+                    ? escapeAttribute(offer.price)
+                    : "") +
             '">' +
             '<input type="text" class="offer-url" placeholder="Lien du produit" value="' +
-                escapeAttribute(offer.url || "") +
+                escapeAttribute(finalUrl) +
             '">' +
             '<label class="offer-affiliate-wrap" style="display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:8px 10px;border:1px solid rgba(139,92,246,.25);border-radius:8px;background:rgba(139,92,246,.06);color:var(--text);font-size:12px;cursor:pointer;white-space:nowrap;">' +
                 '<input type="checkbox" class="offer-affiliate" ' +
-                    (offer.affiliate ? "checked" : "") +
+                    (finalAffiliate ? "checked" : "") +
                 '>' +
                 '<span>Affiliée</span>' +
             '</label>' +
             '<button type="button" class="remove-offer-button" title="Supprimer cette offre">✕</button>';
+
+        var urlInput = row.querySelector(".offer-url");
+        var affiliateCheckbox = row.querySelector(".offer-affiliate");
+
+        if (urlInput) {
+            urlInput.addEventListener("blur", function () {
+                var result = processOfferUrl(urlInput.value);
+
+                if (result.url !== urlInput.value) {
+                    urlInput.value = result.url;
+                }
+
+                if (result.affiliate && affiliateCheckbox) {
+                    affiliateCheckbox.checked = true;
+                }
+            });
+        }
 
         var removeButton = row.querySelector(".remove-offer-button");
 
@@ -376,7 +487,9 @@
     }
 
     function renderOffers(container, offers) {
-        if (!container) return;
+        if (!container) {
+            return;
+        }
 
         container.innerHTML = "";
 
@@ -410,7 +523,16 @@
             var merchant = merchantElement.value.trim();
             var price = priceElement.value;
             var url = urlElement.value.trim();
-            var affiliate = affiliateElement ? affiliateElement.checked : false;
+            var affiliate =
+                affiliateElement ? affiliateElement.checked : false;
+
+            var processed = processOfferUrl(url);
+
+            url = processed.url;
+
+            if (processed.affiliate) {
+                affiliate = true;
+            }
 
             if (merchant || price || url) {
                 offers.push({
@@ -451,7 +573,11 @@
                             "<p>Aucun produit dans la base de données.</p>" +
                         "</div>";
 
-                    setStatus("", "La base de données ne contient aucun produit.");
+                    setStatus(
+                        "",
+                        "La base de données ne contient aucun produit."
+                    );
+
                     return;
                 }
 
@@ -459,13 +585,20 @@
                     createProductCard(product);
                 });
 
-                setStatus("success", products.length + " produit(s) chargé(s) depuis l’API.");
+                setStatus(
+                    "success",
+                    products.length +
+                    " produit(s) chargé(s) depuis l’API."
+                );
             })
             .catch(function (error) {
                 console.error(error);
 
                 productCount.textContent = "0";
-                setStatus("error", "Impossible de contacter le serveur PCFinder.");
+                setStatus(
+                    "error",
+                    "Impossible de contacter le serveur PCFinder."
+                );
 
                 productsContainer.innerHTML =
                     '<div class="empty">' +
@@ -483,7 +616,8 @@
         var cheapestOffer = getCheapestOffer(offers);
 
         var price =
-            cheapestOffer && typeof cheapestOffer.price === "number"
+            cheapestOffer &&
+            typeof cheapestOffer.price === "number"
                 ? cheapestOffer.price + " €"
                 : "Prix inconnu";
 
@@ -535,6 +669,7 @@
             "</div>";
 
         var editButton = card.querySelector(".edit-button");
+
         if (editButton) {
             editButton.addEventListener("click", function () {
                 openEditForm(product);
@@ -542,6 +677,7 @@
         }
 
         var deleteButton = card.querySelector(".delete-button");
+
         if (deleteButton) {
             deleteButton.addEventListener("click", function () {
                 deleteProduct(product);
@@ -573,6 +709,7 @@
         editBatteryWh.value = product.battery || "";
 
         var editImage = ensureImageField("edit");
+
         if (editImage) {
             editImage.value = product.image || "";
         }
@@ -649,13 +786,21 @@
             .then(function (product) {
                 closeEditForm();
 
-                setStatus("success", "Produit modifié avec succès.");
+                setStatus(
+                    "success",
+                    "Produit modifié avec succès."
+                );
+
                 displayScores(product.scores || {});
                 loadProducts();
             })
             .catch(function (error) {
                 console.error(error);
-                setStatus("error", "Impossible d’enregistrer les modifications.");
+
+                setStatus(
+                    "error",
+                    "Impossible d’enregistrer les modifications."
+                );
             });
     }
 
@@ -670,6 +815,7 @@
         resetAddScoreTracking();
 
         var addImage = ensureImageField("add");
+
         if (addImage) {
             addImage.value = "";
         }
@@ -734,7 +880,11 @@
         };
 
         if (!newProduct.name) {
-            setStatus("error", "Le nom du produit est obligatoire.");
+            setStatus(
+                "error",
+                "Le nom du produit est obligatoire."
+            );
+
             return;
         }
 
@@ -755,12 +905,20 @@
             .then(function () {
                 closeAddForm();
 
-                setStatus("success", "PC ajouté avec succès.");
+                setStatus(
+                    "success",
+                    "PC ajouté avec succès."
+                );
+
                 loadProducts();
             })
             .catch(function (error) {
                 console.error(error);
-                setStatus("error", "Impossible d’ajouter le PC.");
+
+                setStatus(
+                    "error",
+                    "Impossible d’ajouter le PC."
+                );
             });
     }
 
@@ -792,12 +950,20 @@
                 return response.json();
             })
             .then(function () {
-                setStatus("success", "Produit supprimé avec succès.");
+                setStatus(
+                    "success",
+                    "Produit supprimé avec succès."
+                );
+
                 loadProducts();
             })
             .catch(function (error) {
                 console.error(error);
-                setStatus("error", "Impossible de supprimer le produit.");
+
+                setStatus(
+                    "error",
+                    "Impossible de supprimer le produit."
+                );
             });
     }
 
@@ -884,11 +1050,13 @@
         var content = String(data.content || payload.content || "");
         var title = String(data.title || payload.title || "");
 
-        var combined = (title + "\n" + content).replace(/\u00a0/g, " ");
+        var combined = (title + "\n" + content)
+            .replace(/\u00a0/g, " ");
 
         function firstMatch(patterns, source) {
             for (var i = 0; i < patterns.length; i++) {
                 var match = source.match(patterns[i]);
+
                 if (match && match[1]) {
                     return match[1].trim();
                 }
@@ -947,7 +1115,10 @@
         );
 
         if (!ram) {
-            var ramFallback = combined.match(/\b(8|12|16|24|32|64|128)\s*Go\b/i);
+            var ramFallback = combined.match(
+                /\b(8|12|16|24|32|64|128)\s*Go\b/i
+            );
+
             ram = ramFallback ? ramFallback[0] : "";
         }
 
@@ -1015,10 +1186,11 @@
                 price
                     .replace(/\s/g, "")
                     .replace(",", ".")
-              )
+            )
             : null;
 
         var merchant = "";
+
         try {
             merchant = new URL(originalUrl).hostname
                 .replace(/^www\./i, "")
@@ -1052,14 +1224,22 @@
 
         if (Array.isArray(data.images) && data.images.length) {
             image = data.images.find(function (item) {
-                return typeof item === "string" && isValidHttpUrl(item);
+                return (
+                    typeof item === "string" &&
+                    isValidHttpUrl(item)
+                );
             }) || "";
         }
 
         if (!image) {
-            var imageMatch = content.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/i);
+            var imageMatch = content.match(
+                /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/i
+            );
+
             image = imageMatch ? imageMatch[1] : "";
         }
+
+        var processedAmazon = processOfferUrl(originalUrl);
 
         var imported = {
             name: cleanValue(name),
@@ -1073,8 +1253,11 @@
             battery: cleanValue(battery),
             image: cleanValue(image),
             merchant: cleanValue(merchant),
-            price: Number.isFinite(numericPrice) ? numericPrice : null,
-            url: originalUrl,
+            price: Number.isFinite(numericPrice)
+                ? numericPrice
+                : null,
+            url: processedAmazon.url,
+            affiliate: processedAmazon.affiliate,
             sourceUrl: data.url || originalUrl,
             importedContent: content
         };
@@ -1083,18 +1266,23 @@
     }
 
     function setImportStatus(type, message) {
-        var element = document.getElementById("pcfinderImportStatus");
+        var element =
+            document.getElementById("pcfinderImportStatus");
 
         if (!element) {
             return;
         }
 
-        element.className = "pcfinder-import-status" + (type ? " " + type : "");
+        element.className =
+            "pcfinder-import-status" +
+            (type ? " " + type : "");
+
         element.textContent = message;
     }
 
     function showImportPreview(product) {
-        var preview = document.getElementById("pcfinderImportPreview");
+        var preview =
+            document.getElementById("pcfinderImportPreview");
 
         if (!preview) {
             return;
@@ -1108,15 +1296,27 @@
             product.screen
         ].filter(Boolean).length;
 
+        var affiliateMessage = "";
+
+        if (product.affiliate) {
+            affiliateMessage =
+                " Lien Amazon affilié activé automatiquement.";
+        }
+
         preview.style.display = "block";
+
         preview.innerHTML =
             "<strong>" +
-                escapeHTML(product.name || "Produit détecté") +
+                escapeHTML(
+                    product.name || "Produit détecté"
+                ) +
             "</strong>" +
             escapeHTML(
                 "Informations détectées : " +
                 detected +
-                "/5 caractéristiques principales. Vérifie les champs avant publication."
+                "/5 caractéristiques principales." +
+                affiliateMessage +
+                " Vérifie les champs avant publication."
             );
     }
 
@@ -1132,29 +1332,76 @@
         if (product.battery) addBatteryWh.value = product.battery;
 
         var addImage = ensureImageField("add");
+
         if (addImage && product.image) {
             addImage.value = product.image;
         }
 
-        if (product.merchant || product.price !== null) {
-            var rows = addOffersContainer.querySelectorAll(".offer-row");
+        if (
+            product.merchant ||
+            product.price !== null
+        ) {
+            var rows =
+                addOffersContainer.querySelectorAll(
+                    ".offer-row"
+                );
+
+            var processed = processOfferUrl(
+                product.url || ""
+            );
 
             if (rows.length === 0) {
                 addOfferRow(addOffersContainer, {
                     merchant: product.merchant || "",
                     price: product.price,
-                    url: product.url || "",
-                    affiliate: false
+                    url: processed.url || "",
+                    affiliate:
+                        product.affiliate ||
+                        processed.affiliate
                 });
             } else {
                 var row = rows[0];
-                var merchant = row.querySelector(".offer-merchant");
-                var price = row.querySelector(".offer-price");
-                var url = row.querySelector(".offer-url");
 
-                if (merchant) merchant.value = product.merchant || "";
-                if (price && product.price !== null) price.value = product.price;
-                if (url) url.value = product.url || "";
+                var merchant =
+                    row.querySelector(".offer-merchant");
+
+                var price =
+                    row.querySelector(".offer-price");
+
+                var url =
+                    row.querySelector(".offer-url");
+
+                var affiliate =
+                    row.querySelector(".offer-affiliate");
+
+                if (merchant) {
+                    merchant.value =
+                        product.merchant || "";
+                }
+
+                if (
+                    price &&
+                    product.price !== null
+                ) {
+                    price.value = product.price;
+                }
+
+                if (url) {
+                    url.value =
+                        processed.url ||
+                        product.url ||
+                        "";
+                }
+
+                if (
+                    affiliate &&
+                    (
+                        product.affiliate ||
+                        processed.affiliate
+                    )
+                ) {
+                    affiliate.checked = true;
+                }
             }
         }
 
@@ -1162,8 +1409,15 @@
     }
 
     function importProductFromURL() {
-        var input = document.getElementById("pcfinderImportUrl");
-        var button = document.getElementById("pcfinderImportButton");
+        var input =
+            document.getElementById(
+                "pcfinderImportUrl"
+            );
+
+        var button =
+            document.getElementById(
+                "pcfinderImportButton"
+            );
 
         if (!input || !button) {
             return;
@@ -1172,14 +1426,21 @@
         var rawUrl = input.value.trim();
 
         if (!isValidHttpUrl(rawUrl)) {
-            setImportStatus("error", "Entre une URL complète commençant par http:// ou https://.");
+            setImportStatus(
+                "error",
+                "Entre une URL complète commençant par http:// ou https://."
+            );
+
             return;
         }
 
         button.disabled = true;
         button.textContent = "⏳ Analyse...";
 
-        setImportStatus("", "Lecture de la page produit...");
+        setImportStatus(
+            "",
+            "Lecture de la page produit..."
+        );
 
         var readerUrl =
             "https://r.jina.ai/" +
@@ -1193,7 +1454,11 @@
         })
             .then(function (response) {
                 if (!response.ok) {
-                    throw new Error("Lecture impossible (" + response.status + ")");
+                    throw new Error(
+                        "Lecture impossible (" +
+                        response.status +
+                        ")"
+                    );
                 }
 
                 return response.text();
@@ -1209,10 +1474,16 @@
                     };
                 }
 
-                var imported = normalizeImportedData(payload, rawUrl);
+                var imported =
+                    normalizeImportedData(
+                        payload,
+                        rawUrl
+                    );
 
                 if (!imported.name) {
-                    throw new Error("Le produit n’a pas pu être identifié.");
+                    throw new Error(
+                        "Le produit n’a pas pu être identifié."
+                    );
                 }
 
                 fillImportedProduct(imported);
@@ -1223,7 +1494,10 @@
                 );
             })
             .catch(function (error) {
-                console.error("Import produit :", error);
+                console.error(
+                    "Import produit :",
+                    error
+                );
 
                 setImportStatus(
                     "error",
@@ -1241,86 +1515,184 @@
     /* ===================================================== */
 
     function bindEvents() {
-        watchScoreInput(addGaming, manuallyEditedAddScores, "gaming");
-        watchScoreInput(addMontage, manuallyEditedAddScores, "montage");
-        watchScoreInput(addCreation, manuallyEditedAddScores, "creation");
-        watchScoreInput(addPerformance, manuallyEditedAddScores, "performance");
-        watchScoreInput(addScoreScreen, manuallyEditedAddScores, "screen");
-        watchScoreInput(addBattery, manuallyEditedAddScores, "battery");
+        watchScoreInput(
+            addGaming,
+            manuallyEditedAddScores,
+            "gaming"
+        );
 
-        watchScoreInput(editGaming, manuallyEditedEditScores, "gaming");
-        watchScoreInput(editMontage, manuallyEditedEditScores, "montage");
-        watchScoreInput(editCreation, manuallyEditedEditScores, "creation");
-        watchScoreInput(editPerformance, manuallyEditedEditScores, "performance");
-        watchScoreInput(editScoreScreen, manuallyEditedEditScores, "screen");
-        watchScoreInput(editBattery, manuallyEditedEditScores, "battery");
+        watchScoreInput(
+            addMontage,
+            manuallyEditedAddScores,
+            "montage"
+        );
+
+        watchScoreInput(
+            addCreation,
+            manuallyEditedAddScores,
+            "creation"
+        );
+
+        watchScoreInput(
+            addPerformance,
+            manuallyEditedAddScores,
+            "performance"
+        );
+
+        watchScoreInput(
+            addScoreScreen,
+            manuallyEditedAddScores,
+            "screen"
+        );
+
+        watchScoreInput(
+            addBattery,
+            manuallyEditedAddScores,
+            "battery"
+        );
+
+        watchScoreInput(
+            editGaming,
+            manuallyEditedEditScores,
+            "gaming"
+        );
+
+        watchScoreInput(
+            editMontage,
+            manuallyEditedEditScores,
+            "montage"
+        );
+
+        watchScoreInput(
+            editCreation,
+            manuallyEditedEditScores,
+            "creation"
+        );
+
+        watchScoreInput(
+            editPerformance,
+            manuallyEditedEditScores,
+            "performance"
+        );
+
+        watchScoreInput(
+            editScoreScreen,
+            manuallyEditedEditScores,
+            "screen"
+        );
+
+        watchScoreInput(
+            editBattery,
+            manuallyEditedEditScores,
+            "battery"
+        );
 
         if (refreshButton) {
-            refreshButton.addEventListener("click", loadProducts);
+            refreshButton.addEventListener(
+                "click",
+                loadProducts
+            );
         }
 
         if (addProductButton) {
-            addProductButton.addEventListener("click", openAddForm);
+            addProductButton.addEventListener(
+                "click",
+                openAddForm
+            );
         }
 
         if (addForm) {
-            addForm.addEventListener("submit", addProduct);
+            addForm.addEventListener(
+                "submit",
+                addProduct
+            );
         }
 
         if (editForm) {
-            editForm.addEventListener("submit", saveProduct);
+            editForm.addEventListener(
+                "submit",
+                saveProduct
+            );
         }
 
         if (cancelEditButton) {
-            cancelEditButton.addEventListener("click", closeEditForm);
+            cancelEditButton.addEventListener(
+                "click",
+                closeEditForm
+            );
         }
 
         if (cancelEditButtonBottom) {
-            cancelEditButtonBottom.addEventListener("click", closeEditForm);
+            cancelEditButtonBottom.addEventListener(
+                "click",
+                closeEditForm
+            );
         }
 
         if (cancelAddButton) {
-            cancelAddButton.addEventListener("click", closeAddForm);
+            cancelAddButton.addEventListener(
+                "click",
+                closeAddForm
+            );
         }
 
         if (cancelAddButtonBottom) {
-            cancelAddButtonBottom.addEventListener("click", closeAddForm);
+            cancelAddButtonBottom.addEventListener(
+                "click",
+                closeAddForm
+            );
         }
 
         if (addOfferEditButton) {
-            addOfferEditButton.addEventListener("click", function () {
-                var hasNoOffers =
-                    editOffersContainer.querySelector(".no-offers");
+            addOfferEditButton.addEventListener(
+                "click",
+                function () {
+                    var hasNoOffers =
+                        editOffersContainer.querySelector(
+                            ".no-offers"
+                        );
 
-                if (hasNoOffers) {
-                    editOffersContainer.innerHTML = "";
+                    if (hasNoOffers) {
+                        editOffersContainer.innerHTML = "";
+                    }
+
+                    addOfferRow(
+                        editOffersContainer,
+                        {
+                            merchant: "",
+                            price: "",
+                            url: "",
+                            affiliate: false
+                        }
+                    );
                 }
-
-                addOfferRow(editOffersContainer, {
-                    merchant: "",
-                    price: "",
-                    url: "",
-                    affiliate: false
-                });
-            });
+            );
         }
 
         if (addOfferAddButton) {
-            addOfferAddButton.addEventListener("click", function () {
-                var hasNoOffers =
-                    addOffersContainer.querySelector(".no-offers");
+            addOfferAddButton.addEventListener(
+                "click",
+                function () {
+                    var hasNoOffers =
+                        addOffersContainer.querySelector(
+                            ".no-offers"
+                        );
 
-                if (hasNoOffers) {
-                    addOffersContainer.innerHTML = "";
+                    if (hasNoOffers) {
+                        addOffersContainer.innerHTML = "";
+                    }
+
+                    addOfferRow(
+                        addOffersContainer,
+                        {
+                            merchant: "",
+                            price: "",
+                            url: "",
+                            affiliate: false
+                        }
+                    );
                 }
-
-                addOfferRow(addOffersContainer, {
-                    merchant: "",
-                    price: "",
-                    url: "",
-                    affiliate: false
-                });
-            });
+            );
         }
     }
 
@@ -1328,11 +1700,14 @@
     /* DÉMARRAGE */
     /* ===================================================== */
 
-    document.addEventListener("DOMContentLoaded", function () {
-        ensureImageField("add");
-        ensureImageField("edit");
-        bindEvents();
-        loadProducts();
-    });
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+            ensureImageField("add");
+            ensureImageField("edit");
+            bindEvents();
+            loadProducts();
+        }
+    );
 
 })();
