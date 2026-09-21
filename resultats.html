@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PCFinder - Résultats</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+
+
+<header class="navbar">
+
+    <a href="index.html" class="logo">
+        PC<span>Finder</span>
+    </a>
+
+
+    <nav>
+
+        <a href="index.html">
+            Accueil
+        </a>
+
+        <a href="recherche.html">
+            Trouver mon PC
+        </a>
+
+        <a href="resultats.html" class="active">
+            Résultats
+        </a>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+
+<section class="results-page">
+
+
+    <!-- ======================================
+         EN-TÊTE
+         ====================================== -->
+
+    <div class="results-header">
+
+        <h1>
+            Voici le TOP 3 de ta recherche
+        </h1>
+
+
+        <a href="recherche.html" class="btn-secondary">
+            ← Modifier ma recherche
+        </a>
+
+    </div>
+
+
+
+    <!-- ======================================
+         FILTRE / TRI
+         ====================================== -->
+
+    <div class="results-controls">
+
+        <select id="sortResults">
+
+            <option value="score">
+                🏆 Meilleur score
+            </option>
+
+            <option value="price-low">
+                💰 Prix croissant
+            </option>
+
+            <option value="price-high">
+                💸 Prix décroissant
+            </option>
+
+            <option value="gaming">
+                🎮 Gaming
+            </option>
+
+            <option value="montage">
+                🎬 Montage
+            </option>
+
+            <option value="screen">
+                🖥️ Écran
+            </option>
+
+            <option value="battery">
+                🔋 Autonomie
+            </option>
+
+        </select>
+
+    </div>
+
+
+
+    <!-- ======================================
+         AUCUNE RECHERCHE
+         ====================================== -->
+
+    <div id="no-results" class="no-results">
+
+        <div class="no-results-icon">
+            🔎
+        </div>
+
+        <h2>
+            Aucune recherche effectuée
+        </h2>
+
+        <p>
+            Commence par remplir le questionnaire.
+        </p>
+
+        <a href="recherche.html" class="btn-primary">
+            Faire ma recherche →
+        </a>
+
+    </div>
+
+
+
+    <!-- ======================================
+         RESULTATS
+         ====================================== -->
+
+    <div id="results" class="results-grid">
+
+        <!-- Les résultats seront ajoutés automatiquement -->
+
+    </div>
+
+
+</section>
+
+
+</main>
+
+
+
+<footer>
+
+    <div class="logo">
+        PC<span>Finder</span>
+    </div>
+
+    <p>
+        © 2026 PCFinder
+    </p>
+
+</footer>
+
+
+
+<script src="script.js"></script>
+<script src="resultats-navigation.js"></script>
+<link rel="stylesheet" href="vendeur-logos.css">
+<script src="logo.js"></script>
+
+
+</body>
+
+</html>

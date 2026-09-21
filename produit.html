@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PCFinder - PC</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="produit.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="navbar">
+
+    <a
+        href="index.html"
+        class="logo"
+    >
+        PC<span>Finder</span>
+    </a>
+
+
+    <nav>
+
+        <a href="index.html">
+            Accueil
+        </a>
+
+        <a href="recherche.html">
+            Trouver mon PC
+        </a>
+
+        <a
+            href="resultats.html"
+            class="active"
+        >
+            Résultats
+        </a>
+
+    </nav>
+
+</header>
+
+
+
+<main>
+
+<section class="product-page">
+
+
+    <!-- ======================================
+         RETOUR
+         ====================================== -->
+
+    <a
+        href="resultats.html"
+        class="product-back"
+    >
+        ← Retour aux résultats
+    </a>
+
+
+
+    <!-- ======================================
+         CHARGEMENT
+         ====================================== -->
+
+    <div
+        id="product-loading"
+        class="product-loading"
+    >
+
+        <div class="product-loading-icon">
+            💻
+        </div>
+
+        <h1>
+            Chargement du PC...
+        </h1>
+
+        <p>
+            PCFinder récupère les informations du produit.
+        </p>
+
+    </div>
+
+
+
+    <!-- ======================================
+         ERREUR
+         ====================================== -->
+
+    <div
+        id="product-error"
+        class="product-error"
+    >
+
+        <div class="product-error-icon">
+            ⚠️
+        </div>
+
+        <h1>
+            PC introuvable
+        </h1>
+
+        <p>
+            Impossible de récupérer les informations de ce PC.
+        </p>
+
+        <a
+            href="resultats.html"
+            class="btn-primary"
+        >
+            Retour aux résultats
+        </a>
+
+    </div>
+
+
+
+    <!-- ======================================
+         PRODUIT
+         ====================================== -->
+
+    <article
+        id="product-detail"
+        class="product-detail"
+    >
+
+
+        <!-- ==================================
+             HERO PRODUIT
+             ================================== -->
+
+        <div class="product-detail-hero">
+
+
+            <div class="product-detail-image">
+
+                <img
+                    id="productImage"
+                    src=""
+                    alt=""
+                >
+
+                <div
+                    id="productImagePlaceholder"
+                    class="product-detail-placeholder"
+                >
+                </div>
+
+            </div>
+
+
+
+            <div class="product-detail-main">
+
+                <span
+                    id="productBrand"
+                    class="product-detail-brand"
+                >
+                </span>
+
+
+                <h1
+                    id="productName"
+                >
+                </h1>
+
+
+                <p
+                    id="productIntro"
+                    class="product-detail-intro"
+                >
+                </p>
+
+
+
+                <div class="product-detail-price">
+
+                    <div>
+
+                        <span>
+                            À partir de
+                        </span>
+
+                        <strong id="productPrice">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <span
+                        id="productMerchant"
+                        class="product-detail-merchant"
+                    >
+                    </span>
+
+                </div>
+
+
+
+                <a
+                    id="productOfferButton"
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-primary product-offer-button"
+                >
+                    Voir l'offre →
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ==================================
+             SCORE
+             ================================== -->
+
+        <section class="product-detail-section">
+
+            <div class="product-section-title">
+
+                <span>
+                    ANALYSE PCFINDER
+                </span>
+
+                <h2>
+                    Notre évaluation
+                </h2>
+
+                <p>
+                    Les scores sont calculés à partir des caractéristiques du PC.
+                </p>
+
+            </div>
+
+
+
+            <div class="product-score-overview">
+
+
+                <div class="product-global-score">
+
+                    <span>
+                        Score PCFinder
+                    </span>
+
+                    <strong id="productScore">
+                        -
+                    </strong>
+
+                    <div class="score-bar detail-score-bar">
+
+                        <div
+                            id="productScoreBar"
+                            class="score-bar-fill"
+                        >
+                        </div>
+
+                    </div>
+
+                    <small>
+                        /100
+                    </small>
+
+                </div>
+
+
+
+                <div class="product-score-grid">
+
+
+                    <div class="score-detail-card">
+
+                        <span>
+                            🎮 Gaming
+                        </span>
+
+                        <strong id="scoreGaming">
+                            -
+                        </strong>
+
+                        <div class="mini-score-bar">
+                            <div id="barGaming"></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="score-detail-card">
+
+                        <span>
+                            🎬 Montage
+                        </span>
+
+                        <strong id="scoreMontage">
+                            -
+                        </strong>
+
+                        <div class="mini-score-bar">
+                            <div id="barMontage"></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="score-detail-card">
+
+                        <span>
+                            🎨 Création
+                        </span>
+
+                        <strong id="scoreCreation">
+                            -
+                        </strong>
+
+                        <div class="mini-score-bar">
+                            <div id="barCreation"></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="score-detail-card">
+
+                        <span>
+                            ⚡ Performances
+                        </span>
+
+                        <strong id="scorePerformance">
+                            -
+                        </strong>
+
+                        <div class="mini-score-bar">
+                            <div id="barPerformance"></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="score-detail-card">
+
+                        <span>
+                            🖥️ Écran
+                        </span>
+
+                        <strong id="scoreScreen">
+                            -
+                        </strong>
+
+                        <div class="mini-score-bar">
+                            <div id="barScreen"></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="score-detail-card">
+
+                        <span>
+                            🔋 Autonomie
+                        </span>
+
+                        <strong id="scoreBattery">
+                            -
+                        </strong>
+
+                        <div class="mini-score-bar">
+                            <div id="barBattery"></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================
+             CARACTERISTIQUES
+             ================================== -->
+
+        <section class="product-detail-section">
+
+            <div class="product-section-title">
+
+                <span>
+                    CARACTÉRISTIQUES
+                </span>
+
+                <h2>
+                    Tout savoir sur ce PC
+                </h2>
+
+            </div>
+
+
+
+            <div class="product-spec-detail-grid">
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        🧠 Processeur
+                    </span>
+
+                    <strong id="detailCpu">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        🎮 Carte graphique
+                    </span>
+
+                    <strong id="detailGpu">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        🧠 Mémoire RAM
+                    </span>
+
+                    <strong id="detailRam">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        💾 Stockage
+                    </span>
+
+                    <strong id="detailStorage">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        📐 Taille écran
+                    </span>
+
+                    <strong id="detailScreen">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        🖥️ Type d'écran
+                    </span>
+
+                    <strong id="detailScreenType">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        📺 Résolution
+                    </span>
+
+                    <strong id="detailResolution">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        ⚡ Fréquence
+                    </span>
+
+                    <strong id="detailRefresh">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        ☀️ Luminosité
+                    </span>
+
+                    <strong id="detailBrightness">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        🌈 Colorimétrie
+                    </span>
+
+                    <strong id="detailColorGamut">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        ⚖️ Poids
+                    </span>
+
+                    <strong id="detailWeight">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="product-spec-detail-card">
+
+                    <span>
+                        🔋 Batterie
+                    </span>
+
+                    <strong id="detailBattery">
+                        -
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================
+             POURQUOI CE PC
+             ================================== -->
+
+        <section class="product-detail-section">
+
+            <div class="product-section-title">
+
+                <span>
+                    ANALYSE
+                </span>
+
+                <h2>
+                    Pourquoi choisir ce PC ?
+                </h2>
+
+            </div>
+
+
+
+            <div class="product-explanation-detail">
+
+                <div class="explanation-icon">
+                    💡
+                </div>
+
+                <p id="productExplanation">
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================
+             POINTS FORTS / FAIBLES
+             ================================== -->
+
+        <section class="product-detail-section">
+
+
+            <div class="product-pros-cons">
+
+
+                <div class="product-pros">
+
+                    <div class="product-section-title compact">
+
+                        <span>
+                            LES + 
+                        </span>
+
+                        <h2>
+                            Points forts
+                        </h2>
+
+                    </div>
+
+
+                    <ul id="productStrengths">
+                    </ul>
+
+                </div>
+
+
+
+                <div class="product-cons">
+
+                    <div class="product-section-title compact">
+
+                        <span>
+                            LES -
+                        </span>
+
+                        <h2>
+                            Points faibles
+                        </h2>
+
+                    </div>
+
+
+                    <ul id="productWeaknesses">
+                    </ul>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================
+             OFFRES
+             ================================== -->
+
+        <section class="product-detail-section">
+
+            <div class="product-section-title">
+
+                <span>
+                    ACHAT
+                </span>
+
+                <h2>
+                    Où acheter ce PC ?
+                </h2>
+
+                <p>
+                    Les prix peuvent évoluer selon les vendeurs.
+                </p>
+
+            </div>
+
+
+
+            <div
+                id="productOffers"
+                class="product-offers"
+            >
+            </div>
+
+        </section>
+
+
+    </article>
+
+</section>
+
+</main>
+
+
+
+<footer>
+
+    <div class="logo">
+        PC<span>Finder</span>
+    </div>
+
+    <p>
+        © 2026 PCFinder
+    </p>
+
+</footer>
+
+
+
+<script src="produit.js"></script>
+
+</body>
+
+</html>

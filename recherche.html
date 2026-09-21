@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>PCFinder - Recherche</title>
+
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+<a
+    href="index.html"
+    class="logo"
+>
+    PC<span>Finder</span>
+</a>
+
+
+<nav>
+
+    <a href="index.html">
+        Accueil
+    </a>
+
+    <a
+        href="recherche.html"
+        class="active"
+    >
+        Trouver mon PC
+    </a>
+
+    <a href="resultats.html">
+        Résultats
+    </a>
+
+</nav>
+
+</header>
+
+<main>
+
+<section class="search-page">
+
+<div class="section-title">
+
+    <span>
+        PCFINDER
+    </span>
+
+    <h1>
+        Trouvons ton PC.
+    </h1>
+
+    <p>
+        Quelques questions et on s'occupe du reste.
+    </p>
+
+</div>
+
+
+<!-- ==================================
+     BUDGET
+     ================================== -->
+
+<div class="question-card">
+
+    <h2>
+        💰 Quel est ton budget maximum ?
+    </h2>
+
+
+    <div class="budget-value">
+
+        <span id="budgetDisplay">
+            1000 €
+        </span>
+
+    </div>
+
+
+    <input
+        type="range"
+        id="budget"
+        min="600"
+        max="1500"
+        value="1000"
+        step="50"
+    >
+
+
+    <div class="range-labels">
+
+        <span>
+            600 €
+        </span>
+
+        <span>
+            1500 €
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================
+     UTILISATION
+     ================================== -->
+
+<div class="question-card">
+
+    <h2>
+        🎮 Que veux-tu faire avec ton PC ?
+    </h2>
+
+
+    <div class="choice-grid">
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="usage"
+            data-value="gaming"
+        >
+
+            🎮
+
+            <strong>
+                Gaming
+            </strong>
+
+            <small>
+                Jouer aux jeux vidéo
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="usage"
+            data-value="montage"
+        >
+
+            🎬
+
+            <strong>
+                Montage vidéo
+            </strong>
+
+            <small>
+                Premiere Pro, DaVinci...
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="usage"
+            data-value="creation"
+        >
+
+            🎨
+
+            <strong>
+                Création
+            </strong>
+
+            <small>
+                Photoshop, After Effects...
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="usage"
+            data-value="mix"
+        >
+
+            🚀
+
+            <strong>
+                Gaming + création
+            </strong>
+
+            <small>
+                Un PC polyvalent
+            </small>
+
+        </button>
+
+
+    </div>
+
+</div>
+
+
+<!-- ==================================
+     TAILLE ECRAN
+     ================================== -->
+
+<div class="question-card">
+
+    <h2>
+        📐 Quelle taille d'écran souhaites-tu ?
+    </h2>
+
+
+    <div class="choice-grid small-grid">
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="size"
+            data-value="14"
+        >
+
+            <strong>
+                14"
+            </strong>
+
+            <small>
+                Compact
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="size"
+            data-value="15"
+        >
+
+            <strong>
+                15"
+            </strong>
+
+            <small>
+                Polyvalent
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="size"
+            data-value="16"
+        >
+
+            <strong>
+                16"
+            </strong>
+
+            <small>
+                Grand écran
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice selected"
+            data-type="size"
+            data-value="all"
+        >
+
+            <strong>
+                Peu importe
+            </strong>
+
+            <small>
+                Je privilégie les performances
+            </small>
+
+        </button>
+
+
+    </div>
+
+</div>
+
+
+<!-- ==================================
+     PRIORITE
+     ================================== -->
+
+<div class="question-card">
+
+    <h2>
+        ⚡ Qu'est-ce qui compte le plus pour toi ?
+    </h2>
+
+
+    <div class="choice-grid">
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="priority"
+            data-value="performance"
+        >
+
+            🚀
+
+            <strong>
+                Performances
+            </strong>
+
+            <small>
+                Le plus puissant possible
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="priority"
+            data-value="screen"
+        >
+
+            🖥️
+
+            <strong>
+                Écran
+            </strong>
+
+            <small>
+                Qualité d'image
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice"
+            data-type="priority"
+            data-value="battery"
+        >
+
+            🔋
+
+            <strong>
+                Autonomie
+            </strong>
+
+            <small>
+                Tenir longtemps
+            </small>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="choice selected"
+            data-type="priority"
+            data-value="balanced"
+        >
+
+            ⚖️
+
+            <strong>
+                Équilibre
+            </strong>
+
+            <small>
+                Un peu de tout
+            </small>
+
+        </button>
+
+
+    </div>
+
+</div>
+
+
+<!-- ==================================
+     BOUTON
+     ================================== -->
+
+<button
+    type="button"
+    id="search-button"
+>
+
+    Trouver mon PC →
+
+</button>
+
+</section>
+
+</main>
+
+<footer>
+
+<div class="logo">
+    PC<span>Finder</span>
+</div>
+
+<p>
+    © 2026 PCFinder
+</p>
+
+</footer>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>

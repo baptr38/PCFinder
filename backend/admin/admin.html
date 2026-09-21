@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PCFinder - Administration</title>
+
+    <link rel="stylesheet" href="admin.css">
+
+</head>
+
+
+<body>
+
+
+<header class="admin-header">
+
+    <div>
+
+        <div class="logo">
+            PC<span>Finder</span>
+        </div>
+
+        <p>
+            Administration des produits
+        </p>
+
+    </div>
+
+
+    <button
+        id="refreshButton"
+        class="secondary-button"
+    >
+        🔄 Actualiser
+    </button>
+
+</header>
+
+
+
+<main class="admin-container">
+
+
+    <section class="dashboard-header">
+
+        <div>
+
+            <span class="section-label">
+                BASE DE DONNÉES
+            </span>
+
+            <h1>
+                Gestion des PC
+            </h1>
+
+            <p>
+                Ajoute, modifie et gère les produits disponibles sur PCFinder.
+            </p>
+
+        </div>
+
+
+        <div class="product-count-box">
+
+            <span>
+                PC disponibles
+            </span>
+
+            <strong id="productCount">
+                0
+            </strong>
+
+        </div>
+
+    </section>
+
+
+
+    <div
+        id="statusMessage"
+        class="status-message"
+    ></div>
+
+
+
+    <section class="products-section">
+
+
+        <div class="section-header">
+
+            <div>
+
+                <span class="section-label">
+                    PRODUITS
+                </span>
+
+                <h2>
+                    Catalogue actuel
+                </h2>
+
+            </div>
+
+
+            <button
+                id="addProductButton"
+                class="primary-button"
+            >
+                + Ajouter un PC
+            </button>
+
+        </div>
+
+
+
+        <div
+            id="productsContainer"
+            class="products-container"
+        >
+
+            <div class="empty">
+                Chargement des produits...
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ================================= -->
+    <!-- MODIFICATION -->
+    <!-- ================================= -->
+
+
+    <section
+        id="editSection"
+        class="form-section hidden"
+    >
+
+
+        <div class="section-header">
+
+            <div>
+
+                <span class="section-label">
+                    MODIFICATION
+                </span>
+
+                <h2 id="editTitle">
+                    Modifier le PC
+                </h2>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="cancelEditButton"
+                class="secondary-button"
+            >
+                ✕ Annuler
+            </button>
+
+        </div>
+
+
+
+        <form id="editForm">
+
+
+            <div class="form-grid">
+
+
+                <div class="form-group">
+
+                    <label for="editName">
+                        Nom du PC
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editName"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editBrand">
+                        Marque
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editBrand"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editCpu">
+                        Processeur
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editCpu"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editGpu">
+                        Carte graphique
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editGpu"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editRam">
+                        RAM
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editRam"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editStorage">
+                        Stockage
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editStorage"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editScreen">
+                        Écran
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editScreen"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editWeight">
+                        Poids
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editWeight"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editBatteryWh">
+                        Batterie
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editBatteryWh"
+                        placeholder="Ex : 76 Wh"
+                    >
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ================================= -->
+            <!-- SCORES -->
+            <!-- ================================= -->
+
+
+            <div class="score-section">
+
+                <h3>
+                    🎯 Scores PCFinder
+                </h3>
+
+                <p class="score-help">
+                    Les scores sont calculés automatiquement selon les caractéristiques du PC.
+                </p>
+
+
+                <div class="score-grid">
+
+
+                    <div class="score-field">
+
+                        <label for="editGaming">
+                            🎮 Gaming
+                        </label>
+
+                        <input
+                            type="number"
+                            id="editGaming"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="editMontage">
+                            🎬 Montage
+                        </label>
+
+                        <input
+                            type="number"
+                            id="editMontage"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="editCreation">
+                            🎨 Création
+                        </label>
+
+                        <input
+                            type="number"
+                            id="editCreation"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="editPerformance">
+                            🚀 Performances
+                        </label>
+
+                        <input
+                            type="number"
+                            id="editPerformance"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="editScreenScore">
+                            🖥️ Écran
+                        </label>
+
+                        <input
+                            type="number"
+                            id="editScreenScore"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="editBattery">
+                            🔋 Autonomie
+                        </label>
+
+                        <input
+                            type="number"
+                            id="editBattery"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ================================= -->
+            <!-- OFFRES -->
+            <!-- ================================= -->
+
+
+            <div class="offers-section">
+
+                <div class="offers-header">
+
+                    <div>
+
+                        <h3>
+                            🛒 Offres disponibles
+                        </h3>
+
+                        <p>
+                            Ajoute les différents vendeurs et leurs prix.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        id="addOfferEditButton"
+                        class="secondary-button"
+                    >
+                        + Ajouter une offre
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="editOffersContainer"
+                    class="offers-container"
+                ></div>
+
+            </div>
+
+
+
+            <div class="form-actions">
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    💾 Enregistrer les modifications
+                </button>
+
+
+                <button
+                    type="button"
+                    id="cancelEditButtonBottom"
+                    class="secondary-button"
+                >
+                    Annuler
+                </button>
+
+            </div>
+
+
+        </form>
+
+
+    </section>
+
+
+
+    <!-- ================================= -->
+    <!-- AJOUT PRODUIT -->
+    <!-- ================================= -->
+
+
+    <section
+        id="addSection"
+        class="form-section hidden"
+    >
+
+
+        <div class="section-header">
+
+            <div>
+
+                <span class="section-label">
+                    NOUVEAU PRODUIT
+                </span>
+
+                <h2>
+                    Ajouter un PC
+                </h2>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="cancelAddButton"
+                class="secondary-button"
+            >
+                ✕ Annuler
+            </button>
+
+        </div>
+
+
+
+        <form id="addForm">
+
+
+            <div class="form-grid">
+
+
+                <div class="form-group">
+
+                    <label for="addName">
+                        Nom du PC
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addName"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addBrand">
+                        Marque
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addBrand"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addCpu">
+                        Processeur
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addCpu"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addGpu">
+                        Carte graphique
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addGpu"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addRam">
+                        RAM
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addRam"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addStorage">
+                        Stockage
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addStorage"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addScreen">
+                        Écran
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addScreen"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addWeight">
+                        Poids
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addWeight"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="addBatteryWh">
+                        Batterie
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addBatteryWh"
+                        placeholder="Ex : 76 Wh"
+                    >
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ================================= -->
+            <!-- SCORES -->
+            <!-- ================================= -->
+
+
+            <div class="score-section">
+
+                <h3>
+                    🎯 Scores PCFinder
+                </h3>
+
+                <p class="score-help">
+                    Les scores sont calculés automatiquement selon les caractéristiques du PC.
+                </p>
+
+
+                <div class="score-grid">
+
+
+                    <div class="score-field">
+
+                        <label for="addGaming">
+                            🎮 Gaming
+                        </label>
+
+                        <input
+                            type="number"
+                            id="addGaming"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="addMontage">
+                            🎬 Montage
+                        </label>
+
+                        <input
+                            type="number"
+                            id="addMontage"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="addCreation">
+                            🎨 Création
+                        </label>
+
+                        <input
+                            type="number"
+                            id="addCreation"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="addPerformance">
+                            🚀 Performances
+                        </label>
+
+                        <input
+                            type="number"
+                            id="addPerformance"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="addScreenScore">
+                            🖥️ Écran
+                        </label>
+
+                        <input
+                            type="number"
+                            id="addScreenScore"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                    <div class="score-field">
+
+                        <label for="addBattery">
+                            🔋 Autonomie
+                        </label>
+
+                        <input
+                            type="number"
+                            id="addBattery"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="5"
+                        >
+
+                        <span>/10</span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ================================= -->
+            <!-- OFFRES -->
+            <!-- ================================= -->
+
+
+            <div class="offers-section">
+
+                <div class="offers-header">
+
+                    <div>
+
+                        <h3>
+                            🛒 Offres disponibles
+                        </h3>
+
+                        <p>
+                            Ajoute les différents vendeurs et leurs prix.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        id="addOfferAddButton"
+                        class="secondary-button"
+                    >
+                        + Ajouter une offre
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="addOffersContainer"
+                    class="offers-container"
+                ></div>
+
+            </div>
+
+
+
+            <div class="form-actions">
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    ➕ Ajouter le PC
+                </button>
+
+
+                <button
+                    type="button"
+                    id="cancelAddButtonBottom"
+                    class="secondary-button"
+                >
+                    Annuler
+                </button>
+
+            </div>
+
+
+        </form>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script src="admin.js"></script>
+
+
+</body>
+
+</html>

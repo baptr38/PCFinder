@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test API PCFinder</title>
+</head>
+
+<body>
+
+    <h1>Test API PCFinder</h1>
+
+    <div id="products">
+        Chargement...
+    </div>
+
+    <script>
+
+        fetch("http://localhost:3000/api/products")
+
+            .then(response => response.json())
+
+            .then(products => {
+
+                const container =
+                    document.getElementById("products");
+
+                container.innerHTML = "";
+
+                products.forEach(product => {
+
+                    const div =
+                        document.createElement("div");
+
+                    div.innerHTML =
+                        "<h2>" +
+                        product.name +
+                        "</h2>" +
+
+                        "<p>" +
+                        product.brand +
+                        "</p>";
+
+                    container.appendChild(div);
+
+                });
+
+            })
+
+            .catch(error => {
+
+                document.getElementById("products").innerHTML =
+                    "Erreur de connexion à l'API.";
+
+                console.error(error);
+
+            });
+
+    </script>
+
+</body>
+
+</html>

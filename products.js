@@ -1,0 +1,460 @@
+const products = [
+
+    {
+        id: 1,
+        name: "Lenovo LOQ 15ARP10E",
+        brand: "Lenovo",
+
+        cpu: "Ryzen 7 170",
+        gpu: "RTX 4050",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '15,6"',
+        screenSize: 15.6,
+        screenType: "IPS",
+        resolution: "1920 × 1080",
+        refresh: "144 Hz",
+        refreshRate: 144,
+        brightness: "300 nits",
+        colorGamut: "100% sRGB",
+
+        weight: "1,8 kg",
+        battery: "57,5 Wh",
+
+        image: "images/lenovo-loq-15arp10e.avif",
+
+        offers: [
+            {
+                merchant: "Fnac",
+                price: 949,
+                url: "https://www.fnac.com/PC-portable-Gaming-Lenovo-LOQ-15ARP10E-15-6-FHD-144-Hz-AMD-Ryzen-7-16-Go-RAM-512-Go-SSD-Nvidia-GeForce-RTX-4050-Gris/a22574799/w-4",
+                affiliate: true
+            }
+        ],
+
+        strengths: [
+            "Bon rapport performances/prix",
+            "Écran 100% sRGB",
+            "16 Go de RAM",
+            "Poids contenu pour un PC gaming"
+        ],
+
+        weaknesses: [
+            "RTX 4050 moins puissante que les RTX 4060/5060",
+            "512 Go de stockage"
+        ],
+
+        scores: {
+            gaming: 78,
+            montage: 76,
+            creation: 74,
+            performance: 78,
+            screen: 82,
+            battery: 68
+        }
+    },
+
+
+    {
+        id: 2,
+        name: "Acer Nitro V 15",
+        brand: "Acer",
+
+        cpu: "Ryzen 7 7735HS",
+        gpu: "RTX 4060",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '15,6"',
+        screenSize: 15.6,
+        screenType: "IPS",
+        resolution: "1920 × 1080",
+        refresh: "144 Hz",
+        refreshRate: 144,
+        brightness: "300 nits",
+        colorGamut: "45% NTSC",
+
+        weight: "2,1 kg",
+        battery: "57,5 Wh",
+
+        image: "images/acer-nitro-v15-4060.jpg",
+
+        offers: [
+            {
+                merchant: "Fnac",
+                price: 999,
+                url: "https://www.fnac.com/PC-Portable-Gaming-Acer-Nitro-V-15-ANV15-41-R1JV/a20646689/w-4",
+                affiliate: true
+            }
+        ],
+
+        strengths: [
+            "RTX 4060",
+            "Très bonnes performances gaming",
+            "16 Go de RAM",
+            "Bon rapport performances/prix"
+        ],
+
+        weaknesses: [
+            "Écran moins adapté à la création graphique",
+            "512 Go de stockage",
+            "Autonomie moyenne"
+        ],
+
+        scores: {
+            gaming: 88,
+            montage: 84,
+            creation: 80,
+            performance: 87,
+            screen: 74,
+            battery: 65
+        }
+    },
+
+
+    {
+        id: 3,
+        name: "MSI Thin A15 B7VF",
+        brand: "MSI",
+
+        cpu: "Ryzen 5 7535HS",
+        gpu: "RTX 4060",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '15,6"',
+        screenSize: 15.6,
+        screenType: "IPS-Level",
+        resolution: "1920 × 1080",
+        refresh: "144 Hz",
+        refreshRate: 144,
+        brightness: "250 nits",
+        colorGamut: "45% NTSC",
+
+        weight: "1,86 kg",
+        battery: "52,4 Wh",
+
+        image: "images/msi-thin-a15.jpg",
+
+        offers: [
+            {
+                merchant: "Fnac",
+                price: 1104,
+                url: "https://www.fnac.com/PC-portable-gaming-MSI-Thin-A15-B7VF-253FR-15-6-Full-HD-144-Hz-AMD-Ryzen-5-16-Go-RAM-512-Go-SSD-Nvidia-GeForce-RTX-4060-Noir/a20661627/w-4",
+                affiliate: true
+            }
+        ],
+
+        strengths: [
+            "RTX 4060",
+            "Très léger pour un PC gaming",
+            "16 Go de RAM",
+            "Bonnes performances générales"
+        ],
+
+        weaknesses: [
+            "RTX 4060 limitée à 45 W",
+            "Écran moyen pour la création",
+            "Autonomie moyenne"
+        ],
+
+        scores: {
+            gaming: 86,
+            montage: 80,
+            creation: 77,
+            performance: 84,
+            screen: 73,
+            battery: 60
+        }
+    },
+
+
+    {
+        id: 4,
+        name: "Acer Nitro V 16 AI",
+        brand: "Acer",
+
+        cpu: "Ryzen 7 260",
+        gpu: "RTX 5060",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '16"',
+        screenSize: 16,
+        screenType: "IPS",
+        resolution: "1920 × 1200",
+        refresh: "180 Hz",
+        refreshRate: 180,
+        brightness: "300 nits",
+        colorGamut: "45% NTSC",
+
+        weight: "2,5 kg",
+        battery: "76 Wh",
+
+        image: "images/acer-nitro-v16-5060.webp",
+
+        offers: [
+            {
+                merchant: "Darty",
+                price: 1149,
+                url: "https://www.darty.com/nav/achat/informatique/ordinateur_portable-portable/portable/avis_1__acer_anv16_r7_16_12_5060.html",
+                affiliate: false
+            }
+        ],
+
+        strengths: [
+            "RTX 5060",
+            "Ryzen 7 260",
+            "Écran 16 pouces 180 Hz",
+            "Format 16:10",
+            "Très bonnes performances en création"
+        ],
+
+        weaknesses: [
+            "2,5 kg",
+            "Écran moins intéressant pour la colorimétrie",
+            "512 Go de stockage"
+        ],
+
+        scores: {
+            gaming: 94,
+            montage: 91,
+            creation: 88,
+            performance: 94,
+            screen: 86,
+            battery: 70
+        }
+    },
+
+
+    {
+        id: 5,
+        name: "Lenovo LOQ Essential 15IRX11",
+        brand: "Lenovo",
+
+        cpu: "Core i5-13450HX",
+        gpu: "RTX 5050",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '15,6"',
+        screenSize: 15.6,
+        screenType: "IPS",
+        resolution: "1920 × 1080",
+        refresh: "144 Hz",
+        refreshRate: 144,
+        brightness: "300 nits",
+        colorGamut: "100% sRGB",
+
+        weight: "2,3 kg",
+        battery: "60 Wh",
+
+        image: "images/lenovo-loq-essential-5050.jpg",
+
+        offers: [
+            {
+                merchant: "Fnac",
+                price: 1199,
+                url: "https://www.fnac.com/PC-portable-gaming-Lenovo-LOQ-Essential-15IRX11-15-6-Full-HD-144-Hz-Intel-Core-i5-16-Go-RAM-512-Go-SSD-Nvidia-GeForce-RTX-5050-Gris/a22407982/w-4",
+                affiliate: true
+            }
+        ],
+
+        strengths: [
+            "RTX 5050 avec 8 Go de VRAM",
+            "Core i5-13450HX",
+            "Écran 100% sRGB",
+            "16 Go de RAM"
+        ],
+
+        weaknesses: [
+            "2,3 kg",
+            "512 Go de stockage",
+            "RTX 5050 limitée à 65 W"
+        ],
+
+        scores: {
+            gaming: 88,
+            montage: 86,
+            creation: 82,
+            performance: 89,
+            screen: 88,
+            battery: 67
+        }
+    },
+
+
+    {
+        id: 6,
+        name: "Gigabyte Gaming A16 RTX 5050",
+        brand: "Gigabyte",
+
+        cpu: "Ryzen 7 260",
+        gpu: "RTX 5050",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '16"',
+        screenSize: 16,
+        screenType: "IPS",
+        resolution: "1920 × 1200",
+        refresh: "165 Hz",
+        refreshRate: 165,
+        brightness: "300 nits",
+        colorGamut: "Non précisé",
+
+        weight: "2,2 kg",
+        battery: "76 Wh",
+
+        image: "images/gigabyte-a16-5050.jpg",
+
+        offers: [
+            {
+                merchant: "Darty",
+                price: 1029,
+                url: "https://www.darty.com/nav/achat/informatique/ordinateur_portable-portable/portable/gigabyte_a16_r7_16_512_5050.html",
+                affiliate: false
+            }
+        ],
+
+        strengths: [
+            "Ryzen 7 260",
+            "Écran 16 pouces 16:10",
+            "165 Hz",
+            "Batterie 76 Wh",
+            "Bon équilibre général"
+        ],
+
+        weaknesses: [
+            "RTX 5050 moins puissante qu'une RTX 5060",
+            "Colorimétrie moins documentée",
+            "2,2 kg"
+        ],
+
+        scores: {
+            gaming: 87,
+            montage: 83,
+            creation: 80,
+            performance: 87,
+            screen: 80,
+            battery: 72
+        }
+    },
+
+
+    {
+        id: 7,
+        name: "Gigabyte Gaming A16 RTX 5060",
+        brand: "Gigabyte",
+
+        cpu: "Ryzen 7 260",
+        gpu: "RTX 5060",
+        ram: "16 Go",
+        storage: "1 To",
+
+        screen: '16"',
+        screenSize: 16,
+        screenType: "IPS",
+        resolution: "1920 × 1200",
+        refresh: "165 Hz",
+        refreshRate: 165,
+        brightness: "300 nits",
+        colorGamut: "100% sRGB",
+
+        weight: "2,2 kg",
+        battery: "76 Wh",
+
+        image: "images/gigabyte-a16-5060.jpg",
+
+        offers: [
+            {
+                merchant: "Fnac",
+                price: 1299,
+                url: "https://www.fnac.com/PC-portable-Gaming-Gigabyte-A16-3VHK3FR894SH-16-165Hz-AMD-Ryzen-7-16-Go-RAM-1-To-SSD-Nvidia-GeForce-RTX-5060-Noir-acier/a21816588/w-4",
+                affiliate: true
+            }
+        ],
+
+        strengths: [
+            "RTX 5060",
+            "Ryzen 7 260",
+            "1 To de stockage",
+            "Écran 16 pouces 165 Hz",
+            "100% sRGB"
+        ],
+
+        weaknesses: [
+            "2,2 kg",
+            "Autonomie correcte sans être exceptionnelle"
+        ],
+
+        scores: {
+            gaming: 94,
+            montage: 90,
+            creation: 88,
+            performance: 94,
+            screen: 90,
+            battery: 78
+        }
+    },
+
+
+    {
+        id: 8,
+        name: "MSI Cyborg 15 A12VF",
+        brand: "MSI",
+
+        cpu: "Core i5-12450H",
+        gpu: "RTX 4060",
+        ram: "16 Go",
+        storage: "512 Go",
+
+        screen: '15,6"',
+        screenSize: 15.6,
+        screenType: "IPS-Level",
+        resolution: "1920 × 1080",
+        refresh: "144 Hz",
+        refreshRate: 144,
+        brightness: "250 nits",
+        colorGamut: "45% NTSC",
+
+        weight: "1,98 kg",
+        battery: "53,5 Wh",
+
+        image: "images/msi-cyborg-4060.jpg",
+
+        offers: [
+            {
+                merchant: "Fnac",
+                price: 1099,
+                url: "https://www.fnac.com/PC-Portable-Gaming-MSI-Cyborg-15-A12VF-466FR-15-6-Intel-Core-i5-16-Go-RAM-512-Go-SSD-Gris/a18279931/w-4",
+                affiliate: true
+            }
+        ],
+
+        strengths: [
+            "RTX 4060",
+            "Design léger",
+            "1,98 kg",
+            "16 Go de RAM"
+        ],
+
+        weaknesses: [
+            "Écran moyen pour la création",
+            "Processeur plus ancien",
+            "512 Go de stockage",
+            "Autonomie moyenne"
+        ],
+
+        scores: {
+            gaming: 82,
+            montage: 76,
+            creation: 74,
+            performance: 80,
+            screen: 74,
+            battery: 72
+        }
+    }
+
+];
