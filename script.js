@@ -245,7 +245,7 @@ CHARGEMENT DES PRODUITS DEPUIS L'API
 function loadProductsFromAPI(callback) {
 
 
-fetch("https://pcfinder-api.onrender.com/api/products")
+fetch("https://pcfinder-api-liwg.onrender.com/api/products")
 
     .then(function (response) {
 
