@@ -1409,180 +1409,180 @@ return imported;
         showImportPreview(product);
     }
 
-    function importProductFromURL() {
-var input = document.getElementById("pcfinderImportUrl");
-var button = document.getElementById("pcfinderImportButton");
+   function importProductFromURL() {
+    var input = document.getElementById("pcfinderImportUrl");
+    var button = document.getElementById("pcfinderImportButton");
 
-
-if (!input || !button) {
-    return;
-}
-
-var rawUrl = input.value.trim();
-
-if (!isValidHttpUrl(rawUrl)) {
-    setImportStatus(
-        "error",
-        "Entre une URL complète commençant par http:// ou https://."
-    );
-    return;
-}
-
-button.disabled = true;
-button.textContent = "⏳ Analyse...";
-
-setImportStatus(
-    "",
-    "Lecture de la page produit..."
-);
-
-/*
- * Amazon : on nettoie l'URL pour retirer les paramètres
- * inutiles et récupérer l'ASIN.
- */
-var cleanUrl = rawUrl;
-
-if (/amazon\./i.test(rawUrl)) {
-    var asinMatch = rawUrl.match(
-        /(?:\/dp\/|\/gp\/product\/|\/product\/)([A-Z0-9]{10})/i
-    );
-
-    if (asinMatch) {
-        var asin = asinMatch[1].toUpperCase();
-
-        cleanUrl =
-            "https://www.amazon.fr/dp/" +
-            asin;
+    if (!input || !button) {
+        return;
     }
-}
 
-var readerUrl =
-    "https://r.jina.ai/" +
-    encodeURI(cleanUrl);
+    var rawUrl = input.value.trim();
 
-fetch(readerUrl, {
-    method: "GET",
-    headers: {
-        "Accept": "application/json"
-    }
-})
-    .then(function (response) {
-        if (!response.ok) {
-            throw new Error(
-                "Lecture impossible (" +
-                response.status +
-                ")"
-            );
-        }
-
-        return response.text();
-    })
-    .then(function (text) {
-        var payload;
-
-        try {
-            payload = JSON.parse(text);
-        } catch (error) {
-            payload = {
-                content: text
-            };
-        }
-
-        var content = "";
-
-        if (
-            payload &&
-            payload.data &&
-            payload.data.content
-        ) {
-            content = String(
-                payload.data.content
-            );
-        } else if (
-            payload &&
-            payload.content
-        ) {
-            content = String(
-                payload.content
-            );
-        }
-
-        /*
-         * Amazon peut répondre avec une page de blocage
-         * tout en renvoyant HTTP 200.
-         */
-        var lowerContent =
-            content.toLowerCase();
-
-        var amazonBlocked =
-            /amazon\./i.test(cleanUrl) &&
-            (
-                lowerContent.indexOf(
-                    "cliquez sur le bouton ci-dessous"
-                ) !== -1 ||
-                lowerContent.indexOf(
-                    "continuez vos achats"
-                ) !== -1 ||
-                lowerContent.indexOf(
-                    "conditions générales de vente"
-                ) !== -1 ||
-                lowerContent.indexOf(
-                    "captcha"
-                ) !== -1
-            );
-
-        if (amazonBlocked) {
-            throw new Error(
-                "Amazon bloque la récupération automatique des informations de cette page."
-            );
-        }
-
-        if (!content.trim()) {
-            throw new Error(
-                "Aucune information exploitable n’a été récupérée."
-            );
-        }
-
-        var imported =
-            normalizeImportedData(
-                payload,
-                rawUrl
-            );
-
-        if (!imported || !imported.name) {
-            throw new Error(
-                "Le produit n’a pas pu être identifié."
-            );
-        }
-
-        fillImportedProduct(
-            imported
-        );
-
-        setImportStatus(
-            "success",
-            "Produit détecté. Vérifie les informations puis complète ce qui manque avant de publier."
-        );
-    })
-    .catch(function (error) {
-        console.error(
-            "Import produit :",
-            error
-        );
-
+    if (!isValidHttpUrl(rawUrl)) {
         setImportStatus(
             "error",
-            error.message ||
-            "Impossible d’analyser cette page."
+            "Entre une URL complète commençant par http:// ou https://."
         );
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "⏳ Analyse...";
+
+    setImportStatus(
+        "",
+        "Lecture de la page produit..."
+    );
+
+    /*
+     * Amazon ajoute énormément de paramètres à ses URLs.
+     * On récupère uniquement l'ASIN pour obtenir une URL propre.
+     */
+    var cleanUrl = rawUrl;
+
+    if (/amazon\./i.test(rawUrl)) {
+        var asinMatch = rawUrl.match(
+            /(?:\/dp\/|\/gp\/product\/|\/product\/)([A-Z0-9]{10})/i
+        );
+
+        if (asinMatch) {
+            cleanUrl =
+                "https://www.amazon.fr/dp/" +
+                asinMatch[1].toUpperCase();
+        }
+    }
+
+    /*
+     * Jina Reader récupère le contenu de la page.
+     */
+    var readerUrl =
+        "https://r.jina.ai/" +
+        encodeURI(cleanUrl);
+
+    console.log("PCFinder - URL originale :", rawUrl);
+    console.log("PCFinder - URL nettoyée :", cleanUrl);
+    console.log("PCFinder - URL Jina :", readerUrl);
+
+    fetch(readerUrl, {
+        method: "GET",
+        headers: {
+            "Accept": "application/json"
+        }
     })
-    .finally(function () {
-        button.disabled = false;
-        button.textContent = "🔎 Analyser";
-    });
+        .then(function (response) {
 
+            console.log(
+                "PCFinder - réponse Jina :",
+                response.status
+            );
 
+            if (!response.ok) {
+                throw new Error(
+                    "Lecture impossible (" +
+                    response.status +
+                    ")"
+                );
+            }
+
+            return response.text();
+        })
+        .then(function (text) {
+
+            console.log(
+                "PCFinder - réponse reçue :",
+                text.substring(0, 1000)
+            );
+
+            var payload;
+
+            try {
+                payload = JSON.parse(text);
+            } catch (error) {
+                payload = {
+                    content: text
+                };
+            }
+
+            var data =
+                payload && payload.data
+                    ? payload.data
+                    : payload || {};
+
+            var content =
+                String(data.content || "");
+
+            var lowerContent =
+                content.toLowerCase();
+
+            /*
+             * Amazon peut répondre avec une page de blocage
+             * au lieu de la fiche produit.
+             */
+            if (
+                /amazon\./i.test(cleanUrl) &&
+                (
+                    lowerContent.indexOf(
+                        "cliquez sur le bouton ci-dessous"
+                    ) !== -1 ||
+                    lowerContent.indexOf(
+                        "continuez vos achats"
+                    ) !== -1 ||
+                    lowerContent.indexOf(
+                        "conditions générales de vente"
+                    ) !== -1 ||
+                    lowerContent.indexOf(
+                        "captcha"
+                    ) !== -1
+                )
+            ) {
+                throw new Error(
+                    "Amazon bloque la récupération automatique des informations de cette page."
+                );
+            }
+
+            var imported =
+                normalizeImportedData(
+                    payload,
+                    rawUrl
+                );
+
+            if (
+                !imported.name ||
+                imported.name.toLowerCase() === "amazon.fr"
+            ) {
+                throw new Error(
+                    "Le produit n’a pas pu être identifié."
+                );
+            }
+
+            fillImportedProduct(imported);
+
+            setImportStatus(
+                "success",
+                "Produit détecté. Vérifie les informations puis complète ce qui manque avant de publier."
+            );
+        })
+        .catch(function (error) {
+
+            console.error(
+                "PCFinder - Import produit :",
+                error
+            );
+
+            setImportStatus(
+                "error",
+                error.message ||
+                "Impossible d’analyser cette page."
+            );
+        })
+        .finally(function () {
+
+            button.disabled = false;
+            button.textContent = "🔎 Analyser";
+        });
 }
+
 
 
     /* ===================================================== */
