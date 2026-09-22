@@ -1410,79 +1410,180 @@ return imported;
     }
 
     function importProductFromURL() {
-        var input = document.getElementById("pcfinderImportUrl");
-        var button = document.getElementById("pcfinderImportButton");
+var input = document.getElementById("pcfinderImportUrl");
+var button = document.getElementById("pcfinderImportButton");
 
-        if (!input || !button) {
-            return;
-        }
 
-        var rawUrl = input.value.trim();
+if (!input || !button) {
+    return;
+}
 
-        if (!isValidHttpUrl(rawUrl)) {
-            setImportStatus("error", "Entre une URL complète commençant par http:// ou https://.");
-            return;
-        }
+var rawUrl = input.value.trim();
 
-        button.disabled = true;
-        button.textContent = "⏳ Analyse...";
+if (!isValidHttpUrl(rawUrl)) {
+    setImportStatus(
+        "error",
+        "Entre une URL complète commençant par http:// ou https://."
+    );
+    return;
+}
 
-        setImportStatus("", "Lecture de la page produit...");
+button.disabled = true;
+button.textContent = "⏳ Analyse...";
 
-        var readerUrl =
-            "https://r.jina.ai/" +
-            encodeURI(rawUrl);
+setImportStatus(
+    "",
+    "Lecture de la page produit..."
+);
 
-        fetch(readerUrl, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        })
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error("Lecture impossible (" + response.status + ")");
-                }
+/*
+ * Amazon : on nettoie l'URL pour retirer les paramètres
+ * inutiles et récupérer l'ASIN.
+ */
+var cleanUrl = rawUrl;
 
-                return response.text();
-            })
-            .then(function (text) {
-                var payload;
+if (/amazon\./i.test(rawUrl)) {
+    var asinMatch = rawUrl.match(
+        /(?:\/dp\/|\/gp\/product\/|\/product\/)([A-Z0-9]{10})/i
+    );
 
-                try {
-                    payload = JSON.parse(text);
-                } catch (error) {
-                    payload = {
-                        content: text
-                    };
-                }
+    if (asinMatch) {
+        var asin = asinMatch[1].toUpperCase();
 
-                var imported = normalizeImportedData(payload, rawUrl);
-
-                if (!imported.name) {
-                    throw new Error("Le produit n’a pas pu être identifié.");
-                }
-
-                fillImportedProduct(imported);
-
-                setImportStatus(
-                    "success",
-                    "Produit détecté. Vérifie les informations puis complète ce qui manque avant de publier."
-                );
-            })
-            .catch(function (error) {
-                console.error("Import produit :", error);
-
-                setImportStatus(
-                    "error",
-                    "Impossible d’analyser cette page. Essaie avec l’URL directe de la fiche produit."
-                );
-            })
-            .finally(function () {
-                button.disabled = false;
-                button.textContent = "🔎 Analyser";
-            });
+        cleanUrl =
+            "https://www.amazon.fr/dp/" +
+            asin;
     }
+}
+
+var readerUrl =
+    "https://r.jina.ai/" +
+    encodeURI(cleanUrl);
+
+fetch(readerUrl, {
+    method: "GET",
+    headers: {
+        "Accept": "application/json"
+    }
+})
+    .then(function (response) {
+        if (!response.ok) {
+            throw new Error(
+                "Lecture impossible (" +
+                response.status +
+                ")"
+            );
+        }
+
+        return response.text();
+    })
+    .then(function (text) {
+        var payload;
+
+        try {
+            payload = JSON.parse(text);
+        } catch (error) {
+            payload = {
+                content: text
+            };
+        }
+
+        var content = "";
+
+        if (
+            payload &&
+            payload.data &&
+            payload.data.content
+        ) {
+            content = String(
+                payload.data.content
+            );
+        } else if (
+            payload &&
+            payload.content
+        ) {
+            content = String(
+                payload.content
+            );
+        }
+
+        /*
+         * Amazon peut répondre avec une page de blocage
+         * tout en renvoyant HTTP 200.
+         */
+        var lowerContent =
+            content.toLowerCase();
+
+        var amazonBlocked =
+            /amazon\./i.test(cleanUrl) &&
+            (
+                lowerContent.indexOf(
+                    "cliquez sur le bouton ci-dessous"
+                ) !== -1 ||
+                lowerContent.indexOf(
+                    "continuez vos achats"
+                ) !== -1 ||
+                lowerContent.indexOf(
+                    "conditions générales de vente"
+                ) !== -1 ||
+                lowerContent.indexOf(
+                    "captcha"
+                ) !== -1
+            );
+
+        if (amazonBlocked) {
+            throw new Error(
+                "Amazon bloque la récupération automatique des informations de cette page."
+            );
+        }
+
+        if (!content.trim()) {
+            throw new Error(
+                "Aucune information exploitable n’a été récupérée."
+            );
+        }
+
+        var imported =
+            normalizeImportedData(
+                payload,
+                rawUrl
+            );
+
+        if (!imported || !imported.name) {
+            throw new Error(
+                "Le produit n’a pas pu être identifié."
+            );
+        }
+
+        fillImportedProduct(
+            imported
+        );
+
+        setImportStatus(
+            "success",
+            "Produit détecté. Vérifie les informations puis complète ce qui manque avant de publier."
+        );
+    })
+    .catch(function (error) {
+        console.error(
+            "Import produit :",
+            error
+        );
+
+        setImportStatus(
+            "error",
+            error.message ||
+            "Impossible d’analyser cette page."
+        );
+    })
+    .finally(function () {
+        button.disabled = false;
+        button.textContent = "🔎 Analyser";
+    });
+
+
+}
+
 
     /* ===================================================== */
     /* ÉVÉNEMENTS */
