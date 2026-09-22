@@ -1866,6 +1866,357 @@ async function recalculateAllScores() {
 }
 
 // ======================================================
+// IMPORT AUTOMATIQUE D'UN PRODUIT DEPUIS UNE URL
+// ======================================================
+
+function cleanImportedText(value) {
+    return String(value || "")
+        .replace(/&amp;/gi, "&")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/&apos;/gi, "'")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&#x2F;/gi, "/")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function extractHtmlValue(html, patterns) {
+    for (const pattern of patterns) {
+        const match = html.match(pattern);
+
+        if (match && match[1]) {
+            return cleanImportedText(match[1]);
+        }
+    }
+
+    return "";
+}
+
+function extractAmazonAsin(url) {
+    const match = String(url || "").match(
+        /(?:\/dp\/|\/gp\/product\/|\/product\/)([A-Z0-9]{10})/i
+    );
+
+    return match
+        ? match[1].toUpperCase()
+        : "";
+}
+
+function parseImportedProductHtml(html, originalUrl) {
+    const title = extractHtmlValue(
+        html,
+        [
+            /<meta[^>]+name=["']title["'][^>]+content=["']([^"']+)["']/i,
+            /<title[^>]*>([\s\S]*?)<\/title>/i
+        ]
+    );
+
+    let cleanTitle = title
+        .replace(/\s*:\s*Amazon\.fr.*$/i, "")
+        .replace(/\s*[-–]\s*Amazon\.fr.*$/i, "")
+        .trim();
+
+    const brand = extractHtmlValue(
+        html,
+        [
+            /<meta[^>]+property=["']product:brand["'][^>]+content=["']([^"']+)["']/i,
+            /<a[^>]+id=["']bylineInfo["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i
+        ]
+    );
+
+    const image = extractHtmlValue(
+        html,
+        [
+            /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
+            /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i
+        ]
+    );
+
+    const priceWhole = extractHtmlValue(
+        html,
+        [
+            /class=["'][^"']*a-price-whole[^"']*["'][^>]*>\s*([\d.,]+)/i
+        ]
+    );
+
+    const priceFraction = extractHtmlValue(
+        html,
+        [
+            /class=["'][^"']*a-price-fraction[^"']*["'][^>]*>\s*(\d{2})/i
+        ]
+    );
+
+    let price = null;
+
+    if (priceWhole) {
+        const whole = priceWhole
+            .replace(/[^\d]/g, "");
+
+        const fraction = priceFraction
+            ? priceFraction.replace(/[^\d]/g, "")
+            : "00";
+
+        const parsedPrice = Number(
+            whole + "." + fraction
+        );
+
+        if (Number.isFinite(parsedPrice)) {
+            price = parsedPrice;
+        }
+    }
+
+    /*
+     * Amazon contient énormément d'informations dans le HTML.
+     * On crée une version texte pour faciliter les recherches.
+     */
+    const text = cleanImportedText(
+        html
+            .replace(/<script[\s\S]*?<\/script>/gi, " ")
+            .replace(/<style[\s\S]*?<\/style>/gi, " ")
+            .replace(/<[^>]+>/g, " ")
+    );
+
+    const combined = cleanImportedText(
+        cleanTitle + " " + text
+    );
+
+    function find(patterns) {
+        for (const pattern of patterns) {
+            const match = combined.match(pattern);
+
+            if (match && match[1]) {
+                return cleanImportedText(match[1]);
+            }
+        }
+
+        return "";
+    }
+
+    let cpu = find([
+        /(AMD\s+Ryzen\s+\d\s+\d{3,5}[A-Z]{0,4})/i,
+        /(Intel\s+Core\s+(?:i[3579]|Ultra\s+\d+)[^,;|)]{0,25})/i
+    ]);
+
+    let gpu = find([
+        /((?:NVIDIA\s+)?GeForce\s+RTX\s+\d{4}(?:\s*Ti)?(?:\s+\d+\s*GB)?)/i,
+        /(RTX\s+\d{4}(?:\s*Ti)?(?:\s+\d+\s*GB)?)/i,
+        /(Radeon\s+RX\s+\d{4})/i
+    ]);
+
+    let ram = find([
+        /(\d+(?:[.,]\d+)?\s*Go)\s+(?:DDR\d|RAM|mémoire vive)/i,
+        /(?:mémoire vive|RAM|memory)[^0-9]{0,20}(\d+(?:[.,]\d+)?\s*Go)/i
+    ]);
+
+    let storage = find([
+        /(\d+(?:[.,]\d+)?\s*(?:To|TB))\s+(?:SSD|NVMe)/i,
+        /(?:SSD|NVMe)[^0-9]{0,20}(\d+(?:[.,]\d+)?\s*(?:To|TB))/i
+    ]);
+
+    let screenSize = find([
+        /(\d{2}(?:[.,]\d)?)\s*(?:pouces|inch|inches|["″])/i
+    ]);
+
+    let resolution = find([
+        /(\d{3,4}\s*[x×]\s*\d{3,4})/i,
+        /\b(FHD\+?|Full HD|WUXGA|QHD|2\.5K|3\.2K|UHD)\b/i
+    ]);
+
+    let refresh = find([
+        /(\d{2,3}\s*Hz)/i
+    ]);
+
+    let screen = [
+        screenSize,
+        resolution,
+        refresh
+    ]
+        .filter(Boolean)
+        .join(" ");
+
+    let weight = find([
+        /(?:poids|weight)[^0-9]{0,40}(\d+(?:[.,]\d+)?\s*kg)/i
+    ]);
+
+    let battery = find([
+        /(?:batterie|battery|capacité)[^0-9]{0,40}(\d+(?:[.,]\d+)?\s*Wh)/i
+    ]);
+
+    if (!cpu) {
+        cpu = "";
+    }
+
+    if (!gpu) {
+        gpu = "";
+    }
+
+    if (!ram) {
+        ram = "";
+    }
+
+    if (!storage) {
+        storage = "";
+    }
+
+    if (!screen) {
+        screen = "";
+    }
+
+    let finalBrand = brand;
+
+    if (!finalBrand && cleanTitle) {
+        const brandMatch = cleanTitle.match(
+            /^(ASUS|Acer|Lenovo|HP|MSI|Dell|Alienware|Gigabyte|Razer|Apple|ASUSTeK)\b/i
+        );
+
+        if (brandMatch) {
+            finalBrand = brandMatch[1];
+        }
+    }
+
+    if (/ASUSTeK/i.test(finalBrand)) {
+        finalBrand = "ASUS";
+    }
+
+    let merchant = "Amazon";
+
+    return {
+        name: cleanTitle,
+        brand: finalBrand,
+        cpu: cpu,
+        gpu: gpu,
+        ram: ram,
+        storage: storage,
+        screen: screen,
+        weight: weight,
+        battery: battery,
+        image: image,
+        merchant: merchant,
+        price: price,
+        url: originalUrl,
+        sourceUrl: originalUrl
+    };
+}
+
+async function importProductFromUrl(url) {
+    const originalUrl = String(url || "").trim();
+
+    if (!originalUrl) {
+        throw new Error("URL manquante.");
+    }
+
+    let targetUrl = originalUrl;
+
+    const asin = extractAmazonAsin(originalUrl);
+
+    if (asin) {
+        targetUrl =
+            "https://www.amazon.fr/dp/" +
+            asin;
+    }
+
+    const response = await fetch(
+        targetUrl,
+        {
+            method: "GET",
+            redirect: "follow",
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36",
+                "Accept":
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Accept-Language":
+                    "fr-FR,fr;q=0.9,en;q=0.8",
+                "Cache-Control":
+                    "no-cache",
+                "Pragma":
+                    "no-cache"
+            }
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Impossible de lire la page (" +
+            response.status +
+            ")."
+        );
+    }
+
+    const html = await response.text();
+
+    if (!html || html.length < 1000) {
+        throw new Error(
+            "La page produit retournée est vide."
+        );
+    }
+
+    const product =
+        parseImportedProductHtml(
+            html,
+            originalUrl
+        );
+
+    if (
+        !product.name ||
+        product.name.toLowerCase() === "amazon.fr"
+    ) {
+        throw new Error(
+            "Impossible d'identifier le produit sur cette page."
+        );
+    }
+
+    return product;
+}
+
+// ======================================================
+// ROUTE IMPORT PRODUIT
+// ======================================================
+
+app.post(
+    "/api/import-product",
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+            const url =
+                req.body &&
+                req.body.url
+                    ? req.body.url
+                    : "";
+
+            if (!url) {
+                return res.status(400).json({
+                    error: "URL manquante."
+                });
+            }
+
+            const product =
+                await importProductFromUrl(url);
+
+            res.json({
+                success: true,
+                product: product
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Erreur import produit :",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    error.message ||
+                    "Impossible d'importer le produit."
+            });
+        }
+    }
+);
+
+// ======================================================
 // ROUTE PRINCIPALE
 // ======================================================
 
