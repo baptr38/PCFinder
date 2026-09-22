@@ -978,206 +978,356 @@
     }
 
     function normalizeImportedData(payload, originalUrl) {
-        var data = payload && payload.data ? payload.data : payload || {};
-        var content = String(data.content || payload.content || "");
-        var title = String(data.title || payload.title || "");
+var data = payload && payload.data ? payload.data : payload || {};
 
-        var combined = (title + "\n" + content).replace(/\u00a0/g, " ");
 
-        function firstMatch(patterns, source) {
-            for (var i = 0; i < patterns.length; i++) {
-                var match = source.match(patterns[i]);
-                if (match && match[1]) {
-                    return match[1].trim();
-                }
-            }
+var content = String(data.content || payload.content || "");
+var title = String(data.title || payload.title || "");
 
-            return "";
+var combined = (title + "\n" + content)
+    .replace(/\u00a0/g, " ")
+    .replace(/\\u002F/g, "/")
+    .replace(/\\u0026/g, "&");
+
+function cleanValue(value) {
+    return String(value || "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function firstMatch(patterns, source) {
+    for (var i = 0; i < patterns.length; i++) {
+        var match = source.match(patterns[i]);
+
+        if (match && match[1]) {
+            return cleanValue(match[1]);
         }
+    }
 
-        function cleanValue(value) {
-            return String(value || "")
-                .replace(/\s+/g, " ")
-                .replace(/\s+\|/g, " |")
-                .trim();
+    return "";
+}
+
+function firstNonEmpty(values) {
+    for (var i = 0; i < values.length; i++) {
+        if (values[i]) {
+            return cleanValue(values[i]);
         }
+    }
 
-        var name = title || firstMatch(
-            [
-                /^#\s+(.+)$/m,
-                /^\*\*(.+?)\*\*\s*$/m
-            ],
-            combined
-        );
+    return "";
+}
 
-        var brand = firstMatch(
-            [
-                /(?:^|\n)(?:Marque|Brand)\s*[:|]\s*([^\n|]+)/i,
-                /\b(Lenovo|Acer|ASUS|Asus|MSI|HP|Dell|Alienware|Gigabyte|Razer|Apple)\b/i
-            ],
-            combined
-        );
+/* =====================================================
+   NOM
+   ===================================================== */
 
-        var cpu = firstMatch(
-            [
-                /\b((?:AMD\s+)?Ryzen\s+[3579][^|\n,;]*)/i,
-                /\b((?:Intel\s+)?Core\s+(?:Ultra\s+\d+|i[3579][^|\n,;]*))/i,
-                /\b((?:Intel\s+)?Celeron[^|\n,;]*)/i
-            ],
-            combined
-        );
+var name = firstNonEmpty([
+    title,
+    firstMatch([
+        /<title[^>]*>([\s\S]*?)<\/title>/i,
+        /(?:^|\n)#\s+(.+)$/im,
+        /(?:^|\n)\*\*(.+?)\*\*\s*$/im,
+        /(?:Product|Produit)\s*(?:Name|Nom)\s*[:|]\s*([^\n|]+)/i
+    ], combined)
+]);
 
-        var gpu = firstMatch(
-            [
-                /\b((?:NVIDIA\s+)?GeForce\s+RTX\s+\d{4}(?:\s*Ti)?(?:\s+\d+\s*GB)?)\b/i,
-                /\b(RTX\s+\d{4}(?:\s*Ti)?(?:\s+\d+\s*GB)?)\b/i,
-                /\b((?:AMD\s+)?Radeon\s+(?:RX\s+)?[A-Z0-9][^|\n,;]*)/i
-            ],
-            combined
-        );
+/* =====================================================
+   MARQUE
+   ===================================================== */
 
-        var ram = firstMatch(
-            [
-                /(?:RAM|mémoire vive|memory)[^0-9]{0,20}(\d{1,3}\s*Go)/i,
-                /\b(\d{1,3}\s*Go)\s*(?:DDR\d|RAM|mémoire)/i
-            ],
-            combined
-        );
+var brand = firstMatch([
+    /(?:Marque|Brand|Fabricant|Manufacturer)\s*[:|]\s*([^\n|]+)/i,
+    /\b(ASUS|ASUSTeK|Acer|Lenovo|MSI|HP|Dell|Alienware|Gigabyte|Razer|Apple|MEDION|Gigabyte|Huawei|Samsung)\b/i
+], combined);
 
-        if (!ram) {
-            var ramFallback = combined.match(/\b(8|12|16|24|32|64|128)\s*Go\b/i);
-            ram = ramFallback ? ramFallback[0] : "";
+if (/^ASUSTeK$/i.test(brand)) {
+    brand = "ASUS";
+}
+
+/* =====================================================
+   PROCESSEUR
+   ===================================================== */
+
+var cpu = firstMatch([
+    /(?:Processeur|Processor|CPU)\s*[:|]\s*([^\n|]+)/i,
+
+    /\b((?:AMD\s+)?Ryzen(?:\s+AI)?\s+(?:3|5|7|9)\s+[A-Za-z0-9][^|\n,;]*)/i,
+
+    /\b((?:AMD\s+)?Ryzen\s+AI\s+\d+\s+[A-Za-z0-9][^|\n,;]*)/i,
+
+    /\b((?:Intel\s+)?Core\s+(?:Ultra\s+\d+|i[3579])[^|\n,;]*)/i,
+
+    /\b((?:Intel\s+)?Celeron[^|\n,;]*)/i,
+
+    /\b((?:Intel\s+)?Pentium[^|\n,;]*)/i
+], combined);
+
+/* =====================================================
+   GPU
+   ===================================================== */
+
+var gpu = firstMatch([
+    /(?:Carte graphique|Graphics|GPU|Graphic Card)\s*[:|]\s*([^\n|]+)/i,
+
+    /\b((?:NVIDIA\s+)?GeForce\s+RTX\s+\d{4}(?:\s*Ti|\s*SUPER)?(?:\s+\d+\s*GB)?)\b/i,
+
+    /\b((?:NVIDIA\s+)?GeForce\s+GTX\s+\d{4}(?:\s*Ti)?(?:\s+\d+\s*GB)?)\b/i,
+
+    /\b(RTX\s+\d{4}(?:\s*Ti|\s*SUPER)?(?:\s+\d+\s*GB)?)\b/i,
+
+    /\b((?:AMD\s+)?Radeon\s+(?:RX\s+)?[A-Z0-9][^|\n,;]*)/i
+], combined);
+
+/* =====================================================
+   RAM
+   ===================================================== */
+
+var ram = firstMatch([
+    /(?:RAM|Mémoire vive|Memory|Mémoire)\s*[:|]\s*(\d{1,3}\s*(?:Go|GB))/i,
+
+    /\b(\d{1,3}\s*(?:Go|GB))\s*(?:DDR\d|LPDDR\d|RAM|Mémoire)/i,
+
+    /\b(\d{1,3}\s*(?:Go|GB))\b/i
+], combined);
+
+/* =====================================================
+   STOCKAGE
+   ===================================================== */
+
+var storage = firstMatch([
+    /(?:Stockage|Storage|Disque dur|SSD|NVMe)\s*[:|]\s*(\d+(?:[.,]\d+)?\s*(?:Go|GB|To|TB))/i,
+
+    /\b(\d+(?:[.,]\d+)?\s*(?:To|TB))\s*(?:SSD|NVMe)?\b/i,
+
+    /\b(\d+(?:[.,]\d+)?\s*(?:Go|GB))\s*(?:SSD|NVMe)\b/i,
+
+    /\b(\d+(?:[.,]\d+)?\s*(?:To|TB|Go|GB))\s+SSD\b/i
+], combined);
+
+/* =====================================================
+   ÉCRAN
+   ===================================================== */
+
+var screenSize = firstMatch([
+    /(?:Écran|Ecran|Screen|Display|Taille de l'écran)\s*[:|]\s*(\d{2}(?:[.,]\d)?)\s*(?:pouces|inch|inches|["″])/i,
+
+    /\b(\d{2}(?:[.,]\d)?)\s*(?:pouces|inch|inches|["″])/i
+], combined);
+
+var resolution = firstMatch([
+    /\b(\d{3,4}\s*[x×]\s*\d{3,4})\b/i,
+
+    /\b(FHD\+|FHD|Full HD|WUXGA|QHD\+|QHD|2\.5K|3\.2K|UHD|4K)\b/i
+], combined);
+
+var refresh = firstMatch([
+    /(?:taux de rafraîchissement|refresh rate|refresh|Hz)\s*[:|]?\s*(\d{2,3}\s*Hz)/i,
+
+    /\b(\d{2,3}\s*Hz)\b/i
+], combined);
+
+var screenParts = [];
+
+if (screenSize) {
+    screenParts.push(screenSize);
+}
+
+if (resolution) {
+    screenParts.push(resolution);
+}
+
+if (refresh) {
+    screenParts.push(refresh);
+}
+
+var screen = screenParts.join(" ");
+
+/* =====================================================
+   POIDS
+   ===================================================== */
+
+var weight = firstMatch([
+    /(?:Poids|Weight|Poids du produit)\s*[:|]\s*(\d+(?:[.,]\d+)?\s*kg)/i,
+
+    /\b(\d+(?:[.,]\d+)?\s*kg)\b/i
+], combined);
+
+/* =====================================================
+   BATTERIE
+   ===================================================== */
+
+var battery = firstMatch([
+    /(?:Batterie|Battery|Capacité de la batterie|Battery Capacity)\s*[:|]?\s*(\d+(?:[.,]\d+)?\s*Wh)/i,
+
+    /\b(\d+(?:[.,]\d+)?\s*Wh)\b/i
+], combined);
+
+/* =====================================================
+   PRIX
+   ===================================================== */
+
+var priceText = firstMatch([
+    /(?:Prix|Price|Prix actuel|Current price|À partir de|From)\s*[:|]?\s*([0-9][0-9\s.,]{1,15})\s*€/i,
+
+    /([0-9][0-9\s.,]{1,15})\s*€/i
+], combined);
+
+var numericPrice = null;
+
+if (priceText) {
+    var normalizedPrice = priceText
+        .replace(/\s/g, "")
+        .replace(/\.(?=\d{3}(?:\D|$))/g, "")
+        .replace(",", ".");
+
+    var parsedPrice = Number(normalizedPrice);
+
+    if (Number.isFinite(parsedPrice)) {
+        numericPrice = parsedPrice;
+    }
+}
+
+/* =====================================================
+   VENDEUR
+   ===================================================== */
+
+var merchant = "";
+
+try {
+    var hostname = new URL(originalUrl).hostname
+        .replace(/^www\./i, "");
+
+    var merchantKey = hostname.split(".")[0];
+
+    var merchantMap = {
+        amazon: "Amazon",
+        fnac: "Fnac",
+        darty: "Darty",
+        boulanger: "Boulanger",
+        cdiscount: "Cdiscount",
+        ldlc: "LDLC",
+        materiel: "Materiel.net",
+        rueducommerce: "Rue du Commerce",
+        carrefour: "Carrefour",
+        auchan: "Auchan"
+    };
+
+    merchant = merchantMap[merchantKey.toLowerCase()] || (
+        merchantKey.charAt(0).toUpperCase() +
+        merchantKey.slice(1)
+    );
+} catch (error) {
+    merchant = "";
+}
+
+/* =====================================================
+   IMAGE
+   ===================================================== */
+
+var image = "";
+
+if (Array.isArray(data.images)) {
+    for (var i = 0; i < data.images.length; i++) {
+        if (
+            typeof data.images[i] === "string" &&
+            isValidHttpUrl(data.images[i])
+        ) {
+            image = data.images[i];
+            break;
         }
+    }
+}
 
-        var storage = firstMatch(
-            [
-                /(?:SSD|NVMe|stockage|storage)[^0-9]{0,25}(\d+(?:[.,]\d+)?\s*(?:Go|GB|To|TB))/i,
-                /\b(\d+(?:[.,]\d+)?\s*(?:Go|GB|To|TB))\s*(?:SSD|NVMe)/i
-            ],
-            combined
-        );
+if (!image) {
+    var imageMatches = content.match(
+        /https?:\/\/[^"'()\s<>]+\.(?:jpg|jpeg|png|webp)(?:\?[^"'()\s<>]*)?/gi
+    );
 
-        var screenSize = firstMatch(
-            [
-                /\b(\d{2}(?:[.,]\d)?)\s*(?:pouces|inch|inches|["″])/i,
-                /\b(\d{2}(?:[.,]\d)?)["″]\b/i
-            ],
-            combined
-        );
+    if (imageMatches && imageMatches.length) {
+        image = imageMatches[0];
+    }
+}
 
-        var resolution = firstMatch(
-            [
-                /\b(\d{3,4}\s*[x×]\s*\d{3,4})\b/i,
-                /\b(FHD|Full HD|WUXGA|QHD|2\.5K|3\.2K|UHD)\b/i
-            ],
-            combined
-        );
+if (!image) {
+    var markdownImage = content.match(
+        /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/i
+    );
 
-        var refresh = firstMatch(
-            [
-                /\b(\d{2,3}\s*Hz)\b/i
-            ],
-            combined
-        );
+    if (markdownImage) {
+        image = markdownImage[1];
+    }
+}
 
-        var screen = [screenSize, resolution, refresh]
-            .filter(Boolean)
-            .join(" ");
+/* =====================================================
+   FALLBACK : récupérer les informations depuis le NOM
+   ===================================================== */
 
-        var weight = firstMatch(
-            [
-                /(?:poids|weight)[^0-9]{0,20}(\d+(?:[.,]\d+)?\s*kg)/i,
-                /\b(\d+(?:[.,]\d+)?\s*kg)\b/i
-            ],
-            combined
-        );
+if (!cpu && name) {
+    cpu = firstMatch([
+        /\b((?:AMD\s+)?Ryzen(?:\s+AI)?\s+(?:3|5|7|9)\s+[A-Za-z0-9][^|,;]*)/i,
+        /\b((?:Intel\s+)?Core\s+(?:Ultra\s+\d+|i[3579])[^|,;]*)/i
+    ], name);
+}
 
-        var battery = firstMatch(
-            [
-                /(?:batterie|battery|capacité)[^0-9]{0,30}(\d+(?:[.,]\d+)?\s*Wh)/i,
-                /\b(\d+(?:[.,]\d+)?\s*Wh)\b/i
-            ],
-            combined
-        );
+if (!gpu && name) {
+    gpu = firstMatch([
+        /\b((?:NVIDIA\s+)?GeForce\s+RTX\s+\d{4}(?:\s*Ti|\s*SUPER)?)\b/i,
+        /\b(RTX\s+\d{4}(?:\s*Ti|\s*SUPER)?)\b/i
+    ], name);
+}
 
-        var price = firstMatch(
-            [
-                /(?:prix|price|à partir de|from)[^0-9€]{0,30}(\d[\d\s.,]{1,10})\s*€/i,
-                /(\d[\d\s.,]{1,10})\s*€/
-            ],
-            combined
-        );
+if (!ram && name) {
+    ram = firstMatch([
+        /\b(\d{1,3}\s*(?:Go|GB))\b/i
+    ], name);
+}
 
-        var numericPrice = price
-            ? Number(
-                price
-                    .replace(/\s/g, "")
-                    .replace(",", ".")
-              )
-            : null;
+if (!storage && name) {
+    storage = firstMatch([
+        /\b(\d+(?:[.,]\d+)?\s*(?:To|TB|Go|GB))\b/i
+    ], name);
+}
 
-        var merchant = "";
-        try {
-            merchant = new URL(originalUrl).hostname
-                .replace(/^www\./i, "")
-                .split(".")[0];
-        } catch (error) {
-            merchant = "";
-        }
+if (!screenSize && name) {
+    screenSize = firstMatch([
+        /\b(\d{2}(?:[.,]\d)?)\s*(?:pouces|inch|inches|["″])/i
+    ], name);
+}
 
-        var merchantMap = {
-            amazon: "Amazon",
-            fnac: "Fnac",
-            darty: "Darty",
-            boulanger: "Boulanger",
-            cdiscount: "Cdiscount",
-            ldlc: "LDLC",
-            materiel: "Materiel.net",
-            rueducommerce: "Rue du Commerce",
-            carrefour: "Carrefour",
-            auchan: "Auchan"
-        };
+if (!screen && screenSize) {
+    screen = screenSize;
 
-        if (merchantMap[merchant.toLowerCase()]) {
-            merchant = merchantMap[merchant.toLowerCase()];
-        } else {
-            merchant =
-                merchant.charAt(0).toUpperCase() +
-                merchant.slice(1);
-        }
+    if (refresh) {
+        screen += " " + refresh;
+    }
+}
 
-        var image = "";
+var imported = {
+    name: cleanValue(name),
+    brand: cleanValue(brand),
+    cpu: cleanValue(cpu),
+    gpu: cleanValue(gpu),
+    ram: cleanValue(ram),
+    storage: cleanValue(storage),
+    screen: cleanValue(screen),
+    weight: cleanValue(weight),
+    battery: cleanValue(battery),
+    image: cleanValue(image),
+    merchant: cleanValue(merchant),
+    price: Number.isFinite(numericPrice) ? numericPrice : null,
+    url: originalUrl,
+    sourceUrl: data.url || originalUrl,
+    importedContent: content
+};
 
-        if (Array.isArray(data.images) && data.images.length) {
-            image = data.images.find(function (item) {
-                return typeof item === "string" && isValidHttpUrl(item);
-            }) || "";
-        }
+return imported;
 
-        if (!image) {
-            var imageMatch = content.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/i);
-            image = imageMatch ? imageMatch[1] : "";
-        }
 
-        var imported = {
-            name: cleanValue(name),
-            brand: cleanValue(brand),
-            cpu: cleanValue(cpu),
-            gpu: cleanValue(gpu),
-            ram: cleanValue(ram),
-            storage: cleanValue(storage),
-            screen: cleanValue(screen),
-            weight: cleanValue(weight),
-            battery: cleanValue(battery),
-            image: cleanValue(image),
-            merchant: cleanValue(merchant),
-            price: Number.isFinite(numericPrice) ? numericPrice : null,
-            url: originalUrl,
-            sourceUrl: data.url || originalUrl,
-            importedContent: content
-        };
 
-        return imported;
+
     }
 
         function setImportStatus(type, message) {
