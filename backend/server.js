@@ -2417,17 +2417,23 @@ app.post(
             // ------------------------------------------
 
             if (
-                req.body.imageFile
-            ) {
+req.body.imageFile &&
+req.body.imageFile.data
+) {
 
-                const imageResult =
-                    await uploadImageToGithub(
-                        req.body.imageFile
-                    );
 
-                newProduct.image =
-                    imageResult.path;
-            }
+const imageResult =
+    await uploadImageToGithub(
+        req.body.imageFile
+    );
+
+newProduct.image =
+    imageResult.path;
+
+
+}
+
+            
 
             // ------------------------------------------
             // AMAZON
